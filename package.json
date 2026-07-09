@@ -1,0 +1,43 @@
+{
+  "name": "dreamweave",
+  "version": "0.1.0",
+  "description": "DreamWeave — the general-contractor layer for agent commerce on the CROO Agent Protocol (CAP). Cast a dream; a Weaver hires a crew of agents, escrows a shared budget in DreamVault on Base, and settles each thread on verified proof.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "serve": "tsx server/index.ts",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "croo",
+    "cap",
+    "agent-to-agent",
+    "a2a",
+    "agent-commerce",
+    "erc-8004",
+    "base",
+    "usdc",
+    "escrow",
+    "0g",
+    "tee"
+  ],
+  "dependencies": {
+    "jose": "^5.9.6",
+    "pg": "^8.13.1",
+    "pg-mem": "^3.0.5",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
