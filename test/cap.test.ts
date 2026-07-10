@@ -82,6 +82,7 @@ test("no proof, no payment: failed verification voids + refunds buyer", async ()
   cap.fund(buyer.did, usdc("10"));
 
   let order = await cap.negotiate(buyer.did, seller.did, terms());
+  await cap.accept(order.id, seller.did);
   await cap.lock(order.id, buyer.did);
   await cap.deliver(order.id, seller.did, makeProof("wrong artifact"));
 
@@ -118,6 +119,7 @@ test("insufficient funds blocks lock", async () => {
   cap.fund(buyer.did, usdc("1")); // less than 5
 
   const order = await cap.negotiate(buyer.did, seller.did, terms());
+  await cap.accept(order.id, seller.did);
   await assert.rejects(() => cap.lock(order.id, buyer.did), /insufficient USDC/);
 });
 
