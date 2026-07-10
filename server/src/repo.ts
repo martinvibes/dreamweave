@@ -49,6 +49,8 @@ export interface DreamRow {
   chainDreamId: bigint | null;
   txOpen: string | null;
   txClose: string | null;
+  prooftreeRoot: string | null;
+  prooftreeLeaves: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -134,6 +136,8 @@ function mapDream(r: Record<string, unknown>): DreamRow {
     chainDreamId: r.chain_dream_id != null ? toBig(r.chain_dream_id) : null,
     txOpen: (r.tx_open as string) ?? null,
     txClose: (r.tx_close as string) ?? null,
+    prooftreeRoot: (r.prooftree_root as string) ?? null,
+    prooftreeLeaves: (r.prooftree_leaves as string) ?? null,
     createdAt: String(r.created_at),
     updatedAt: String(r.updated_at),
   };
@@ -300,6 +304,8 @@ export async function updateDream(
     chainDreamId: bigint;
     txOpen: string;
     txClose: string;
+    prooftreeRoot: string;
+    prooftreeLeaves: string;
   }>,
 ): Promise<void> {
   const db = await getDb();
@@ -313,6 +319,10 @@ export async function updateDream(
     (sets.push(`chain_dream_id = $${i++}`), vals.push(patch.chainDreamId.toString()));
   if (patch.txOpen !== undefined) (sets.push(`tx_open = $${i++}`), vals.push(patch.txOpen));
   if (patch.txClose !== undefined) (sets.push(`tx_close = $${i++}`), vals.push(patch.txClose));
+  if (patch.prooftreeRoot !== undefined)
+    (sets.push(`prooftree_root = $${i++}`), vals.push(patch.prooftreeRoot));
+  if (patch.prooftreeLeaves !== undefined)
+    (sets.push(`prooftree_leaves = $${i++}`), vals.push(patch.prooftreeLeaves));
   if (sets.length === 0) return;
   sets.push(`updated_at = now()`);
   vals.push(id);

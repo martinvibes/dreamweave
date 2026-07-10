@@ -117,10 +117,16 @@ async function migrate(db: Db): Promise<void> {
       chain_dream_id BIGINT,
       tx_open        TEXT,
       tx_close       TEXT,
+      prooftree_root TEXT,
+      prooftree_leaves TEXT,
       created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+
+  // Existing deployments predate the prooftree columns.
+  await db.query(`ALTER TABLE dreams ADD COLUMN IF NOT EXISTS prooftree_root TEXT;`);
+  await db.query(`ALTER TABLE dreams ADD COLUMN IF NOT EXISTS prooftree_leaves TEXT;`);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS threads (
