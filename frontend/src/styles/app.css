@@ -447,3 +447,62 @@
 .lp__marquee:hover .lp__marquee-track { animation-play-state: paused; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .lp__marquee-track { animation: none; } }
+
+/* --- why section v2: sticky manifesto + feature ledger --- */
+.lp__why { padding: 90px 24px; }
+.lp__why-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 64px;
+  align-items: start;
+}
+@media (max-width: 880px) { .lp__why-grid { grid-template-columns: 1fr; gap: 36px; } }
+.lp__why-sticky { position: sticky; top: 90px; }
+@media (max-width: 880px) { .lp__why-sticky { position: static; } }
+.lp__manifesto { font-size: clamp(30px, 3.6vw, 46px); line-height: 1.08; margin-top: 12px; }
+.lp__reveal { display: block; overflow: hidden; }
+.lp__reveal > span { display: inline-block; will-change: transform; }
+
+.lp__feats { display: flex; flex-direction: column; }
+.lp__feat {
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  padding: 26px 14px 26px 6px;
+  border-top: 1px solid var(--line-soft);
+  position: relative;
+  transition: background 0.25s var(--ease), padding-left 0.3s var(--ease);
+  cursor: default;
+}
+.lp__feat:last-child { border-bottom: 1px solid var(--line-soft); }
+.lp__feat::before {
+  content: "";
+  position: absolute;
+  left: 0; top: -1px;
+  height: 1px; width: 0%;
+  background: linear-gradient(90deg, var(--amber), transparent);
+  transition: width 0.45s var(--ease);
+}
+.lp__feat:hover { padding-left: 18px; background: linear-gradient(90deg, color-mix(in srgb, var(--amber) 5%, transparent), transparent 55%); }
+.lp__feat:hover::before { width: 100%; }
+.lp__feat:nth-child(2):hover { background: linear-gradient(90deg, color-mix(in srgb, var(--mint) 6%, transparent), transparent 55%); }
+.lp__feat:nth-child(2):hover::before { background: linear-gradient(90deg, var(--mint), transparent); }
+.lp__feat-n {
+  font-size: 12px;
+  color: var(--text-faint);
+  flex: none;
+  transition: color 0.25s var(--ease);
+}
+.lp__feat:hover .lp__feat-n { color: var(--amber); }
+.lp__feat:nth-child(2):hover .lp__feat-n { color: var(--mint); }
+.lp__feat-body h3 { font-size: 19px; margin-bottom: 7px; }
+.lp__feat-body p { color: var(--text-dim); font-size: 14.5px; line-height: 1.65; max-width: 52ch; }
+.lp__feat-arrow {
+  margin-left: auto;
+  color: var(--text-faint);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s var(--ease);
+  flex: none;
+}
+.lp__feat:hover .lp__feat-arrow { opacity: 1; transform: translateX(0); color: var(--amber); }

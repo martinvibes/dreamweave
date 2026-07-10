@@ -15,16 +15,17 @@ export function WeaveSpine({ containerRef }: { containerRef: RefObject<HTMLEleme
   });
   const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.4 });
 
-  // 0..100 wide, 0..1000 tall — weaves center → left → right → center.
+  // 0..100 wide, 0..1000 tall — starts BELOW the hero so it stays pristine,
+  // then weaves left → right → center to the footer.
   const d =
-    "M 50 12 " +
-    "C 50 60, 22 80, 22 128 " +
-    "S 78 210, 78 262 " +
-    "S 20 340, 20 396 " +
-    "S 80 470, 80 528 " +
-    "S 25 600, 25 660 " +
-    "S 75 730, 75 790 " +
-    "S 50 860, 50 912 " +
+    "M 50 150 " +
+    "C 50 195, 22 215, 22 262 " +
+    "S 78 340, 78 392 " +
+    "S 20 465, 20 520 " +
+    "S 80 592, 80 648 " +
+    "S 25 715, 25 770 " +
+    "S 75 838, 75 888 " +
+    "S 50 945, 50 968 " +
     "L 50 986";
 
   return (

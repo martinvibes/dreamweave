@@ -31,12 +31,16 @@ const fade = {
 
 export default function Landing() {
   const nav = useNavigate();
-  const { authenticated, login } = useAuth();
+  const { enter: enterAuth } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { api.stats().then(setStats).catch(() => {}); }, []);
-  const enter = () => (authenticated ? nav("/app") : login());
+  // Instant entry: never blocked by a wallet SDK. Connect later, in-app.
+  const enter = (path = "/app") => {
+    enterAuth();
+    nav(path);
+  };
 
   return (
     <div className="lp" ref={pageRef}>
@@ -50,7 +54,7 @@ export default function Landing() {
         </nav>
         <div className="lp__nav-right">
           <ThemeToggle />
-          <button className="btn btn--sm btn--primary" onClick={enter}>Open app</button>
+          <button className="btn btn--sm btn--primary" onClick={() => enter()}>Open app</button>
         </div>
       </motion.header>
 
@@ -71,7 +75,7 @@ export default function Landing() {
         </motion.p>
         <motion.div className="lp__cta" custom={3} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
           <Magnetic>
-            <button className="btn btn--primary btn--lg btn--shine" onClick={enter}>Start a project →</button>
+            <button className="btn btn--primary btn--lg btn--shine" onClick={() => enter("/app/new")}>Start a project →</button>
           </Magnetic>
           <Magnetic>
             <a className="btn btn--ghost btn--lg btn--shine" href={STORE_URL} target="_blank" rel="noreferrer">
@@ -115,32 +119,53 @@ export default function Landing() {
         </div>
       </Section>
 
-      <div id="why" className="lp__section wrap" style={{ paddingTop: 20 }}>
-        <motion.div className="lp__why-card card" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}>
-          <div>
+      <section id="why" className="lp__why wrap">
+        <div className="lp__why-grid">
+          <div className="lp__why-sticky">
             <div className="eyebrow">Why it's different</div>
-            <h2>Others sell agents.<br />Others verify agents.<br /><span className="hl">We give birth to them.</span></h2>
+            <h2 className="lp__manifesto">
+              <Reveal line="Others sell agents." />
+              <Reveal line="Others verify agents." delay={0.15} />
+              <Reveal line="We give birth to them." delay={0.3} hl />
+            </h2>
+            <motion.p
+              className="dim"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              style={{ maxWidth: "36ch", marginTop: 18 }}
+            >
+              A general contractor for the agent economy — live on the CROO store,
+              spending real USDC, leaving receipts everywhere it goes.
+            </motion.p>
           </div>
-          <ul className="lp__why-list">
+          <div className="lp__feats">
             {[
-              <><b>Real hires, real money.</b> Subcontractors come from the live CROO store — negotiated, escrowed, and settled in USDC on Base.</>,
-              <><b>Agents born on demand.</b> Missing skill? The Foundry creates a new agent, lists it on the store, and hires it — it keeps earning after your job, and pays its maker a 10% royalty forever.</>,
-              <><b>Pay on proof.</b> Work runs with hardware (TEE) attestation; a task only settles after its proof verifies.</>,
-              <><b>One hash proves everything.</b> The proof tree rolls every sub-order, payment, and attestation into a single root anyone can re-derive offline.</>,
-            ].map((content, i) => (
-              <motion.li
-                key={i}
-                initial={{ opacity: 0, x: 26 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.12, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              { n: "01", t: "Real hires, real money", d: "Subcontractors come from the live CROO store — negotiated, escrowed, and settled in USDC on Base. Not a sandbox; the receipts are on-chain." },
+              { n: "02", t: "Agents born on demand", d: "Missing skill? The Foundry creates a new agent, lists it on the store, and hires it. It keeps earning after your job — and pays its maker a 10% royalty forever." },
+              { n: "03", t: "Pay on proof", d: "Work runs with hardware (TEE) attestation. A task only settles after its proof verifies — no proof, no payment, enforced by the protocol." },
+              { n: "04", t: "One hash proves everything", d: "The proof tree rolls every sub-order, payment, and attestation into a single root anyone can re-derive offline. Trust nothing; verify once." },
+            ].map((f, i) => (
+              <motion.div
+                key={f.n}
+                className="lp__feat"
+                initial={{ opacity: 0, y: 26 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-70px" }}
+                transition={{ delay: i * 0.08, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
               >
-                {content}
-              </motion.li>
+                <span className="lp__feat-n mono">{f.n}</span>
+                <div className="lp__feat-body">
+                  <h3>{f.t}</h3>
+                  <p>{f.d}</p>
+                </div>
+                <span className="lp__feat-arrow" aria-hidden>⟶</span>
+              </motion.div>
             ))}
-          </ul>
-        </motion.div>
-      </div>
+          </div>
+        </div>
+      </section>
 
       <div className="lp__marquee" aria-hidden>
         <div className="lp__marquee-track mono">
@@ -159,7 +184,7 @@ export default function Landing() {
           API). It becomes hireable by every project and every other agent, and earns USDC on Base
           for each job it completes.
         </motion.p>
-        <motion.button className="btn btn--primary btn--lg" onClick={enter} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        <motion.button className="btn btn--primary btn--lg btn--shine" onClick={() => enter("/app/deploy")} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
           Deploy an agent →
         </motion.button>
       </Section>
@@ -188,6 +213,23 @@ function Stat({ v, k, mint }: { v: string; k: string; mint?: boolean }) {
       <div className="lp__stat-v"><CountUp value={v} /></div>
       <div className="lp__stat-k">{k}</div>
     </div>
+  );
+}
+
+/** A line of the manifesto rising out of a mask — editorial reveal. */
+function Reveal({ line, delay = 0, hl }: { line: string; delay?: number; hl?: boolean }) {
+  return (
+    <span className="lp__reveal">
+      <motion.span
+        className={hl ? "hl" : undefined}
+        initial={{ y: "110%" }}
+        whileInView={{ y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {line}
+      </motion.span>
+    </span>
   );
 }
 

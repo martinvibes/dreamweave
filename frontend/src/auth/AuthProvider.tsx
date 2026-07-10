@@ -1,16 +1,30 @@
 import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { configureAuth } from "@/lib/api";
 
 const PRIVY_APP_ID =
   (import.meta.env.VITE_PRIVY_APP_ID as string | undefined) ??
   "cmrb1gi9b000r0cjly6tupaz7";
 
+const GUEST_KEY = "dw-guest-id";
+
 export interface AuthState {
   ready: boolean;
   authenticated: boolean;
+  /** true when signed in via wallet/email (not guest) */
+  connected: boolean;
   userId: string | null;
   wallet: string | null;
+  /** Instant entry — never blocks on a third-party SDK. */
+  enter: () => void;
+  /** Optional wallet/email sign-in (Privy). */
   login: () => void;
   logout: () => void;
 }
@@ -26,10 +40,17 @@ export function useAuth(): AuthState {
 function Bridge({ children }: { children: ReactNode }) {
   const { ready, authenticated, user, login, logout, getAccessToken } = usePrivy();
   const { wallets } = useWallets();
-  const wallet = wallets[0]?.address ?? null;
-  const userId = user?.id ?? null;
+  const [guestId, setGuestId] = useState<string | null>(
+    () => localStorage.getItem(GUEST_KEY),
+  );
 
-  // Wire the API client to Privy's token + (for local dev) the user id.
+  const wallet = wallets[0]?.address ?? null;
+  const privyUserId = user?.id ?? null;
+  const userId = privyUserId ?? guestId;
+  const isAuthed = authenticated || Boolean(guestId);
+
+  // Wire the API client to Privy's token + the user id (guest ids ride the
+  // x-user-id dev header; the server accepts them in permissive mode).
   useEffect(() => {
     configureAuth(
       async () => (authenticated ? await getAccessToken().catch(() => null) : null),
@@ -38,8 +59,41 @@ function Bridge({ children }: { children: ReactNode }) {
   }, [authenticated, userId, getAccessToken]);
 
   const value = useMemo<AuthState>(
-    () => ({ ready, authenticated, userId, wallet, login, logout }),
-    [ready, authenticated, userId, wallet, login, logout],
+    () => ({
+      ready: true, // guest path means the app is always ready to enter
+      authenticated: isAuthed,
+      connected: authenticated,
+      userId,
+      wallet,
+      enter: () => {
+        if (isAuthed) return;
+        const id = `guest-${crypto.randomUUID().slice(0, 12)}`;
+        localStorage.setItem(GUEST_KEY, id);
+        setGuestId(id);
+      },
+      login: () => {
+        // Real sign-in when available; never a dead click — fall back to guest.
+        if (ready && !authenticated) {
+          try {
+            login();
+            return;
+          } catch {
+            /* fall through to guest */
+          }
+        }
+        if (!isAuthed) {
+          const id = `guest-${crypto.randomUUID().slice(0, 12)}`;
+          localStorage.setItem(GUEST_KEY, id);
+          setGuestId(id);
+        }
+      },
+      logout: () => {
+        localStorage.removeItem(GUEST_KEY);
+        setGuestId(null);
+        if (authenticated) void logout();
+      },
+    }),
+    [ready, authenticated, isAuthed, userId, wallet, login, logout],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -56,8 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           walletChainType: "ethereum-only",
         },
         embeddedWallets: { createOnLogin: "users-without-wallets" },
-        // email + wallet work with zero extra dashboard config; add "google"
-        // in code once it's enabled in the Privy dashboard OAuth settings.
         loginMethods: ["email", "wallet"],
       }}
     >

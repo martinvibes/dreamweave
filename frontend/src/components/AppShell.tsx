@@ -12,7 +12,7 @@ const NAV = [
 ];
 
 export function AppShell() {
-  const { authenticated, ready, login, logout, wallet, userId } = useAuth();
+  const { authenticated, connected, login, logout, wallet, userId } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -68,11 +68,14 @@ export function AppShell() {
           </div>
           <div className="topbar__acct">
             <ThemeToggle />
-            {ready && authenticated ? (
+            {authenticated ? (
               <>
                 <span className="acct-chip mono">
-                  {wallet ? short(wallet) : short(userId ?? "")}
+                  {wallet ? short(wallet) : connected ? short(userId ?? "") : "guest"}
                 </span>
+                {!connected && (
+                  <button className="btn btn--sm" onClick={login}>Connect wallet</button>
+                )}
                 <button className="btn btn--sm btn--ghost" onClick={logout}>Sign out</button>
               </>
             ) : (
