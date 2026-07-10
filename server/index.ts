@@ -41,6 +41,7 @@ import {
   getDream,
   listAgents,
   listDreams,
+  listRoyalties,
   listThreads,
   platformStats,
   updateDream,
@@ -149,6 +150,24 @@ const server = createServer(async (req, res) => {
         balanceUsdc: formatUsdc(units),
         balanceUnits: units.toString(),
       });
+    }
+
+    // royalty ledger — what born agents owe the Foundry
+    if (method === "GET" && path === "/api/royalties") {
+      const rows = await listRoyalties();
+      const royalties = await Promise.all(
+        rows.map(async (r) => {
+          const child = await getAgent(r.childAgentId);
+          return {
+            childAgentId: r.childAgentId,
+            childName: child?.name ?? r.childAgentId,
+            orderRef: r.orderRef,
+            amountUsdc: formatUsdc(r.amountUsdc),
+            createdAt: r.createdAt,
+          };
+        }),
+      );
+      return send(res, 200, { royalties });
     }
 
     // proof tree for a settled dream — anyone can re-derive the root offline

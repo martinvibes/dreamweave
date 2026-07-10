@@ -20,6 +20,30 @@ export interface RunTask {
   proofHash?: string;
   settlementRef?: string;
   txHash?: string;
+  /** true when the hire went through the real CROO store */
+  store?: boolean;
+}
+
+export interface Birth {
+  id: number;
+  name: string;
+  capabilityId: string;
+  storeUrl: string | null;
+}
+
+export interface ProofLeaf {
+  orderId: string;
+  serviceId: string;
+  agent: string;
+  role: "hired" | "born" | "local";
+  deliverableHash: string;
+  payTxHash?: string;
+  teeAttestation?: string;
+}
+
+export interface ProofTree {
+  root: string;
+  leaves: ProofLeaf[];
 }
 
 export interface LogLine {
@@ -41,6 +65,8 @@ export interface RunState {
   tasks: RunTask[];
   logs: LogLine[];
   payments: Payment[];
+  births: Birth[];
+  prooftree: ProofTree | null;
   done: boolean;
   spentUsdc?: string;
   refundedUsdc?: string;
@@ -52,6 +78,8 @@ const empty: RunState = {
   tasks: [],
   logs: [],
   payments: [],
+  births: [],
+  prooftree: null,
   done: false,
 };
 
@@ -99,6 +127,7 @@ export function useRun(projectId: string | null): RunState {
             proofHash: t.proofHash ? String(t.proofHash) : undefined,
             settlementRef: t.settlementRef ? String(t.settlementRef) : undefined,
             txHash: t.txHash ? String(t.txHash) : undefined,
+            store: Boolean(t.store),
           };
           push((s) => {
             const i = s.tasks.findIndex((x) => x.id === rt.id);
@@ -136,6 +165,31 @@ export function useRun(projectId: string | null): RunState {
                 txHash: e.txHash ? String(e.txHash) : undefined,
               },
             ],
+          }));
+          break;
+        case "birth": {
+          const a = e.agent as Record<string, unknown>;
+          push((s) => ({
+            ...s,
+            births: [
+              ...s.births,
+              {
+                id: seq.current++,
+                name: String(a?.name ?? ""),
+                capabilityId: String(a?.capabilityId ?? ""),
+                storeUrl: a?.storeUrl ? String(a.storeUrl) : null,
+              },
+            ],
+          }));
+          break;
+        }
+        case "prooftree":
+          push((s) => ({
+            ...s,
+            prooftree: {
+              root: String(e.root ?? "0x0"),
+              leaves: Array.isArray(e.leaves) ? (e.leaves as ProofLeaf[]) : [],
+            },
           }));
           break;
         case "done":

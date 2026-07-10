@@ -164,5 +164,30 @@ export const api = {
       body: JSON.stringify({ brief }),
     }),
 
+  prooftree: (id: string) =>
+    req<{
+      root: string;
+      leaves: {
+        orderId: string;
+        serviceId: string;
+        agent: string;
+        role: "hired" | "born" | "local";
+        deliverableHash: string;
+        payTxHash?: string;
+        teeAttestation?: string;
+      }[];
+    }>(`/api/dreams/${encodeURIComponent(id)}/prooftree`),
+
+  royalties: () =>
+    req<{
+      royalties: {
+        childAgentId: string;
+        childName: string;
+        orderRef: string;
+        amountUsdc: string;
+        createdAt: string;
+      }[];
+    }>("/api/royalties").then((r) => r.royalties),
+
   streamUrl: (id: string) => `${BASE}/api/dreams/${id}/stream`,
 };
