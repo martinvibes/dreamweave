@@ -10,7 +10,6 @@
 export * from "./cap/types.js";
 export type { CapClient } from "./cap/client.js";
 export { SimCapClient, CapError, type SimOptions } from "./cap/sim.js";
-export { OnchainCapClient, type OnchainConfig } from "./cap/onchain.js";
 export { createCapClient, backendFromEnv, type Backend } from "./cap/index.js";
 export {
   hashArtifact,

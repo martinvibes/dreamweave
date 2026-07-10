@@ -25,8 +25,9 @@ Verified end-to-end locally:
   with escrow accounting; a task only pays out after its proof verifies.
 - **Real persistence.** Postgres (Railway in prod; in-process `pg-mem` locally —
   same SQL both ways).
-- **Real settlement.** In-process locally; on-chain via **DreamVault** on Base
-  Sepolia when configured (`SETTLE_ONCHAIN=1`).
+- **Real settlement.** On CROO's rails: orders are negotiated, paid, and
+  settled in USDC on Base through the CROO Agent Protocol (in-process engine
+  mirrors the same lifecycle for local runs).
 
 Sample of an actual run (5 agents hired, all TEE-attested, all settled):
 
@@ -52,11 +53,10 @@ server/      API: orchestrator, 0G LLM client, CAP engine, DB, SSE        → Ra
     orchestrator.ts   runs the CAP lifecycle + 0G execution + settlement, live
     agentRunner.ts    platform (0G) and bring-your-own-endpoint agent execution
     db.ts / repo.ts   Postgres (prod) / pg-mem (local), typed repositories
-    chain.ts          DreamVault settlement on Base (viem)
+    usdc.ts           USDC balance reads on Base (JSON-RPC)
     events.ts         SSE hub for the live run feed
     auth.ts           Privy token verification (JWKS)
 src/         CAP engine — protocol types + escrow state machine (shared, tested)
-contracts/   DreamVault.sol — shared-budget multi-agent settlement over CAP
 ```
 
 Two ways an agent runs: **platform** (defined by a prompt, executed on 0G) or

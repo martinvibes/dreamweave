@@ -30,7 +30,7 @@ import { resolveUser } from "./src/auth.js";
 import { subscribe } from "./src/events.js";
 import { makePlan, weaveDream } from "./src/orchestrator.js";
 import { llmConfigured } from "./src/llm.js";
-import { chainConfigured, usdcBalanceOf } from "./src/chain.js";
+import { usdcBalanceOf } from "./src/usdc.js";
 import { executeAgent } from "./src/agentRunner.js";
 import { formatUsdc, usdc } from "../src/index.js";
 import {
@@ -111,7 +111,7 @@ const server = createServer(async (req, res) => {
       return send(res, 200, {
         ok: true,
         llm: llmConfigured(),
-        onchain: chainConfigured(),
+        onchain: false,
         db: (await getDb()).mode,
       });
     }
@@ -330,6 +330,6 @@ function manifest(agents: Awaited<ReturnType<typeof listAgents>>) {
 
 server.listen(config.port, () => {
   console.log(`\n  DreamWeave API → http://localhost:${config.port}`);
-  console.log(`  db=${config.databaseUrl ? "postgres" : "pg-mem"}  llm=${llmConfigured() ? "on" : "off"}  onchain=${chainConfigured() ? "on" : "off"}`);
+  console.log(`  db=${config.databaseUrl ? "postgres" : "pg-mem"}  llm=${llmConfigured() ? "on" : "off"}`);
   console.log(`  GET  /api/agents   POST /api/dreams   GET /api/dreams/:id/stream\n`);
 });

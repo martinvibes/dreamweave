@@ -56,16 +56,13 @@ export const config = {
   },
 
   // --- chain (Base) ---
+  // Settlement happens on CROO's rails (USDC on Base mainnet via CAP orders).
+  // These values are only used to read/display wallet USDC balances.
   chain: {
-    // 84532 = Base Sepolia (default), 8453 = Base mainnet.
-    id: Number(env("CHAIN_ID", "84532")),
-    rpcUrl: env("BASE_RPC_URL", "https://sepolia.base.org"),
-    usdc: env("USDC_ADDRESS", "0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
-    dreamVault: env("DREAMVAULT_ADDRESS"),
-    // Operator key the server uses to submit settlement txs (if server-settled).
-    operatorKey: env("OPERATOR_PRIVATE_KEY"),
-    // When false, the engine runs settlement in-process (dev) instead of on-chain.
-    onchain: bool("SETTLE_ONCHAIN", false),
+    // 8453 = Base mainnet, 84532 = Base Sepolia.
+    id: Number(env("CHAIN_ID", "8453")),
+    rpcUrl: env("BASE_RPC_URL", "https://mainnet.base.org"),
+    usdc: env("USDC_ADDRESS", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
   },
 } as const;
 

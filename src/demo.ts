@@ -11,8 +11,8 @@
  *      specialist through CAP's Negotiate->Lock->Deliver->Clear lifecycle;
  *   5. prints a settlement ledger + the anti-sybil metrics judges look for.
  *
- * Swap DREAMWEAVE_BACKEND=onchain (with CAP addresses) to run the same script
- * against Base — no agent code changes.
+ * In production the same lifecycle runs on CROO's rails via @croo-network/sdk
+ * (real CAP orders, USDC on Base) — no agent code changes.
  */
 
 import { SimCapClient } from "./cap/sim.js";

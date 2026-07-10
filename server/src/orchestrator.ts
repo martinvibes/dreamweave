@@ -35,7 +35,6 @@ import {
   updateThread,
   type AgentRow,
 } from "./repo.js";
-import { chainConfigured, settleThreadOnchain } from "./chain.js";
 
 const WEAVER_DID = "did:erc8004:weaver.dreamweave" as const;
 
@@ -213,39 +212,27 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
         continue;
       }
 
-      // settle (on-chain when configured, else in-process)
-      let settlementRef = order.settlementRef ?? "";
-      let txHash: string | undefined;
-      if (chainConfigured() && dream.chainDreamId != null && agent.payoutAddress) {
-        txHash = await settleThreadOnchain(dream.chainDreamId, {
-          seller: agent.payoutAddress as `0x${string}`,
-          amount: agent.priceUsdc,
-          capOrderId: order.id,
-          proofHash: delivery.resultHash,
-        });
-        settlementRef = txHash;
-      }
+      // settle (CROO settles orders on-chain; locally the engine settles in-process)
+      const settlementRef = order.settlementRef ?? "";
 
       spent += agent.priceUsdc;
       await updateThread(threadId, {
         phase: "clear",
         settlementRef,
-        ...(txHash ? { txHash } : {}),
       });
       await recordAgentEarning(agent.id, agent.priceUsdc);
-      emitPhase("clear", { settlementRef, txHash });
+      emitPhase("clear", { settlementRef });
       publish(dreamId, {
         type: "settle",
         threadId,
         sellerName: agent.name,
         amountUsdc: formatUsdc(agent.priceUsdc),
         settlementRef,
-        txHash,
       });
       publish(dreamId, {
         type: "log",
         level: "value",
-        text: `clear · ${formatUsdc(agent.priceUsdc)} USDC released to ${agent.name}${txHash ? ` · ${txHash.slice(0, 14)}…` : ""}`,
+        text: `clear · ${formatUsdc(agent.priceUsdc)} USDC released to ${agent.name}`,
       });
     } catch (err) {
       await updateThread(threadId, { phase: "void" });

@@ -46,16 +46,3 @@ Two services: **API on Railway**, **web on Vercel**.
 In the Privy dashboard for app `cmrb1gi9b000r0cjly6tupaz7`, add both domains
 (the Vercel domain and `http://localhost:5173`) to **Allowed origins**.
 
-## 4. On-chain settlement (optional)
-
-Deploy DreamVault to Base Sepolia (needs a funded deployer key — get free test
-ETH from a Base Sepolia faucet):
-
-```bash
-forge create contracts/DreamVault.sol:DreamVault \
-  --rpc-url https://sepolia.base.org \
-  --private-key $DEPLOYER_KEY \
-  --constructor-args 0x036CbD53842c5426634e7929541eC2318f3dCF7e
-```
-
-Put the address in `DREAMVAULT_ADDRESS`, set `SETTLE_ONCHAIN=1`, redeploy the API.
