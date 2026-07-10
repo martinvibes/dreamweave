@@ -506,3 +506,33 @@
   flex: none;
 }
 .lp__feat:hover .lp__feat-arrow { opacity: 1; transform: translateX(0); color: var(--amber); }
+
+/* --- manifesto sizing + soft highlights --- */
+.lp__manifesto { font-size: clamp(34px, 4.4vw, 56px); }
+.lp__why-sticky .dim { font-size: 16.5px; line-height: 1.7; }
+.hl-soft { color: var(--amber-hi); font-weight: 600; }
+
+/* --- 404: the thread that leads nowhere --- */
+.nf {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  position: relative;
+}
+.nf__brand { position: absolute; top: 26px; left: 28px; }
+.nf__svg { width: min(600px, 92vw); height: auto; }
+.nf__fray { animation: nfsway 3.2s ease-in-out infinite; }
+@keyframes nfsway { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(2.5deg); } }
+.nf__code {
+  font-size: 13px;
+  letter-spacing: 0.5em;
+  color: var(--amber);
+  margin-bottom: 10px;
+}
+.nf__body h1 { font-size: clamp(30px, 5vw, 52px); margin-bottom: 12px; }
+.nf__body p { color: var(--text-dim); }
+.nf__cta { display: flex; gap: 12px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }

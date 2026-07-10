@@ -12,6 +12,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import NewProject from "./pages/NewProject";
 import DeployAgent from "./pages/DeployAgent";
 import Payments from "./pages/Payments";
+import NotFound from "./pages/NotFound";
 import { AppShell } from "./components/AppShell";
 import "./styles/global.css";
 import "./styles/app.css";
@@ -33,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/app/marketplace" element={<Marketplace />} />
               <Route path="/app/payments" element={<Payments />} />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

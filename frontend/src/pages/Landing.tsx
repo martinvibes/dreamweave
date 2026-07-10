@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   animate,
   motion,
@@ -30,17 +30,11 @@ const fade = {
 };
 
 export default function Landing() {
-  const nav = useNavigate();
   const { enter: enterAuth } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { api.stats().then(setStats).catch(() => {}); }, []);
-  // Instant entry: never blocked by a wallet SDK. Connect later, in-app.
-  const enter = (path = "/app") => {
-    enterAuth();
-    nav(path);
-  };
 
   return (
     <div className="lp" ref={pageRef}>
@@ -54,7 +48,7 @@ export default function Landing() {
         </nav>
         <div className="lp__nav-right">
           <ThemeToggle />
-          <button className="btn btn--sm btn--primary" onClick={() => enter()}>Open app</button>
+          <Link className="btn btn--sm btn--primary" to="/app" onClick={enterAuth}>Open app</Link>
         </div>
       </motion.header>
 
@@ -75,7 +69,7 @@ export default function Landing() {
         </motion.p>
         <motion.div className="lp__cta" custom={3} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
           <Magnetic>
-            <button className="btn btn--primary btn--lg btn--shine" onClick={() => enter("/app/new")}>Start a project →</button>
+            <Link className="btn btn--primary btn--lg btn--shine" to="/app/new" onClick={enterAuth}>Start a project →</Link>
           </Magnetic>
           <Magnetic>
             <a className="btn btn--ghost btn--lg btn--shine" href={STORE_URL} target="_blank" rel="noreferrer">
@@ -136,8 +130,9 @@ export default function Landing() {
               transition={{ delay: 0.6, duration: 0.8 }}
               style={{ maxWidth: "36ch", marginTop: 18 }}
             >
-              A general contractor for the agent economy — live on the CROO store,
-              spending real USDC, leaving receipts everywhere it goes.
+              A general contractor for the agent economy — <b className="hl-soft">live on the
+              CROO store</b>, spending <b className="hl-soft">real USDC</b>, leaving{" "}
+              <b className="hl-soft">receipts everywhere it goes</b>.
             </motion.p>
           </div>
           <div className="lp__feats">
@@ -184,9 +179,11 @@ export default function Landing() {
           API). It becomes hireable by every project and every other agent, and earns USDC on Base
           for each job it completes.
         </motion.p>
-        <motion.button className="btn btn--primary btn--lg btn--shine" onClick={() => enter("/app/deploy")} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
-          Deploy an agent →
-        </motion.button>
+        <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
+          <Magnetic>
+            <Link className="btn btn--primary btn--lg btn--shine" to="/app/agents/new" onClick={enterAuth}>Deploy an agent →</Link>
+          </Magnetic>
+        </motion.div>
       </Section>
 
       <footer className="lp__foot wrap">

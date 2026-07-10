@@ -70,24 +70,57 @@ export function ThreadField() {
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 1.7 }}
       />
 
-      {/* small, tight hub */}
+      {/* the hub: a generous halo that fades tight, breathing slowly */}
       <motion.circle
         cx={HUB.x}
         cy={HUB.y}
-        r="26"
+        r="52"
         fill="url(#tf-hub)"
-        initial={{ opacity: 0 }}
-        animate={reduced ? { opacity: 0.8 } : { opacity: [0.55, 0.85, 0.55] }}
-        transition={reduced ? { duration: 0.5 } : { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={
+          reduced
+            ? { opacity: 0.75, scale: 1 }
+            : { opacity: [0.45, 0.9, 0.45], scale: [0.94, 1.08, 0.94] }
+        }
+        transition={
+          reduced
+            ? { duration: 0.5 }
+            : { duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 1.5 }
+        }
+        style={{ transformOrigin: `${HUB.x}px ${HUB.y}px` }}
       />
+      {/* a ping ring blooms out every few seconds */}
+      {!reduced && (
+        <motion.circle
+          cx={HUB.x}
+          cy={HUB.y}
+          r="10"
+          fill="none"
+          stroke="var(--amber)"
+          strokeWidth="1.2"
+          initial={{ opacity: 0, scale: 1 }}
+          animate={{ opacity: [0, 0.55, 0], scale: [1, 3.4, 3.4] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay: 2.2, repeatDelay: 1.2 }}
+          style={{ transformOrigin: `${HUB.x}px ${HUB.y}px` }}
+        />
+      )}
+      {/* the core: bright, with a soft heartbeat blink */}
       <motion.circle
         cx={HUB.x}
         cy={HUB.y}
-        r="4"
+        r="5"
         fill="var(--amber-hi)"
         initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        animate={
+          reduced
+            ? { opacity: 1, scale: 1 }
+            : { opacity: [1, 1, 0.55, 1, 1], scale: [1, 1, 0.9, 1.12, 1] }
+        }
+        transition={
+          reduced
+            ? { delay: 1.5, duration: 0.5 }
+            : { delay: 1.5, duration: 2.8, repeat: Infinity, times: [0, 0.62, 0.72, 0.82, 1], ease: "easeInOut" }
+        }
         style={{ transformOrigin: `${HUB.x}px ${HUB.y}px` }}
       />
     </svg>
