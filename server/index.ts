@@ -31,6 +31,7 @@ import { subscribe } from "./src/events.js";
 import { makePlan, weaveDream } from "./src/orchestrator.js";
 import { llmConfigured } from "./src/llm.js";
 import { usdcBalanceOf } from "./src/usdc.js";
+import { startWeaverProvider } from "./src/weaverProvider.js";
 import { executeAgent } from "./src/agentRunner.js";
 import { formatUsdc, usdc } from "../src/index.js";
 import {
@@ -330,6 +331,9 @@ function manifest(agents: Awaited<ReturnType<typeof listAgents>>) {
 
 server.listen(config.port, () => {
   console.log(`\n  DreamWeave API → http://localhost:${config.port}`);
-  console.log(`  db=${config.databaseUrl ? "postgres" : "pg-mem"}  llm=${llmConfigured() ? "on" : "off"}`);
+  console.log(`  db=${config.databaseUrl ? "postgres" : "pg-mem"}  llm=${llmConfigured() ? "on" : "off"}  croo=${config.croo.live ? "live" : "off"}`);
   console.log(`  GET  /api/agents   POST /api/dreams   GET /api/dreams/:id/stream\n`);
+  void startWeaverProvider().catch((e) =>
+    console.error("weaver provider failed to start:", e),
+  );
 });
