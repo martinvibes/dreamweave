@@ -4,13 +4,16 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/auth/AuthProvider";
 import { ThemeToggle } from "@/theme/ThemeProvider";
 import { Logo } from "@/components/Logo";
+import { ThreadField } from "@/components/ThreadField";
 import { api, type Stats } from "@/lib/api";
 
+const STORE_URL = "https://agent.croo.network/agents/58729a60-4a85-44c3-b7f0-654f3c1ee5db";
+
 const STEPS = [
-  { n: "01", t: "Describe what you want", d: "Type a goal in plain English — “launch my app”, “research a market”, “write and design a campaign”." },
-  { n: "02", t: "Get a team, not a task", d: "DreamWeave breaks your goal into steps and lines up the right AI agent for each — each with a price." },
-  { n: "03", t: "Approve the budget", d: "See the full team and total cost up front. Fund it once — held safely on Base until work is delivered." },
-  { n: "04", t: "Pay only for proof", d: "Each agent does the work on 0G with a verifiable proof, then gets paid. Unused budget comes back to you." },
+  { n: "01", t: "Plan", d: "Describe an outcome in plain English. DreamWeave breaks it into tasks and prices the whole job up front." },
+  { n: "02", t: "Hire", d: "It shops the live CROO Agent Store and hires a real specialist for each task — negotiated, escrowed, and paid in USDC on Base." },
+  { n: "03", t: "Birth", d: "No agent offers a skill you need? The Foundry creates one on the spot — a brand-new agent, listed on the store, hired for its first job seconds after it exists." },
+  { n: "04", t: "Prove", d: "Every delivery carries a hardware-attested proof. The whole job rolls up into one proof tree — a single hash anyone can verify." },
 ];
 
 const fade = {
@@ -42,21 +45,23 @@ export default function Landing() {
       </motion.header>
 
       <section className="lp__hero wrap">
-        <HeroBackdrop />
-        <motion.div className="pill" custom={0} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
-          <span className="dot" style={{ background: "var(--violet)" }} /> AI on 0G · settled on Base
+        <ThreadField />
+        <motion.div className="pill pill--live" custom={0} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
+          <span className="dot" /> Live on the CROO Agent Store · USDC on Base
         </motion.div>
         <motion.h1 custom={1} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
-          Hire a <span className="hl">team of AI agents</span><br />to get real work done.
+          Hire a <span className="hl">team</span>, not an agent.
         </motion.h1>
         <motion.p className="lp__sub" custom={2} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
-          Don't manage one bot at a time. Describe an outcome — DreamWeave assembles a crew of
-          specialist agents, runs the work, and pays each one only when the result is proven.
-          You approve the budget; unused funds return to you.
+          Describe an outcome. DreamWeave hires real specialist agents from the CROO store,
+          pays them on-chain when their work is proven — and when the right specialist
+          doesn't exist, <b>it creates one, live</b>. Every job ships with a proof tree.
         </motion.p>
         <motion.div className="lp__cta" custom={3} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
           <button className="btn btn--primary btn--lg" onClick={enter}>Start a project →</button>
-          <button className="btn btn--ghost btn--lg" onClick={() => nav("/app/marketplace")}>Browse agents</button>
+          <a className="btn btn--ghost btn--lg" href={STORE_URL} target="_blank" rel="noreferrer">
+            Hire us on the CROO Store ↗
+          </a>
         </motion.div>
 
         <motion.div className="lp__stats" custom={4} variants={fade} initial="hidden" animate="show">
@@ -83,13 +88,13 @@ export default function Landing() {
         <motion.div className="lp__why-card card" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}>
           <div>
             <div className="eyebrow">Why it's different</div>
-            <h2>Others sell labor.<br /><span className="hl">We sell outcomes.</span></h2>
+            <h2>Others sell agents.<br />Others verify agents.<br /><span className="hl">We give birth to them.</span></h2>
           </div>
           <ul className="lp__why-list">
-            <li><b>Verifiable work.</b> Every agent runs on 0G with a hardware (TEE) proof attached to its result.</li>
-            <li><b>Pay on proof.</b> No result, no payment — enforced by the protocol on Base, not a promise.</li>
-            <li><b>One budget, whole team.</b> Fund a project once; each agent draws its fee only when its part is done.</li>
-            <li><b>Open & composable.</b> Any agent is hireable over an open API — by you, or by other agents.</li>
+            <li><b>Real hires, real money.</b> Subcontractors come from the live CROO store — negotiated, escrowed, and settled in USDC on Base.</li>
+            <li><b>Agents born on demand.</b> Missing skill? The Foundry creates a new agent, lists it on the store, and hires it — it keeps earning after your job, and pays its maker a 10% royalty forever.</li>
+            <li><b>Pay on proof.</b> Work runs with hardware (TEE) attestation; a task only settles after its proof verifies.</li>
+            <li><b>One hash proves everything.</b> The proof tree rolls every sub-order, payment, and attestation into a single root anyone can re-derive offline.</li>
           </ul>
         </motion.div>
       </div>
@@ -132,22 +137,3 @@ function Stat({ v, k, mint }: { v: string; k: string; mint?: boolean }) {
   );
 }
 
-/** A soft animated web-of-threads backdrop behind the hero. */
-function HeroBackdrop() {
-  return (
-    <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, opacity: 0.5, pointerEvents: "none" }} preserveAspectRatio="xMidYMid slice" viewBox="0 0 800 500" aria-hidden>
-      {Array.from({ length: 6 }).map((_, i) => {
-        const y = 90 + i * 62;
-        return (
-          <motion.path
-            key={i}
-            d={`M -50 ${y} C 250 ${y - 40}, 550 ${y + 50}, 850 ${y}`}
-            stroke="var(--amber)" strokeWidth="1" fill="none" opacity={0.18}
-            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
-            transition={{ duration: 2 + i * 0.3, ease: "easeInOut", delay: i * 0.15 }}
-          />
-        );
-      })}
-    </svg>
-  );
-}

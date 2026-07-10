@@ -234,3 +234,98 @@
 
 .lp__foot { display: flex; align-items: center; justify-content: space-between; padding: 32px 24px; border-top: 1px solid var(--line-soft); flex-wrap: wrap; gap: 14px; }
 .lp__foot .lp__brand { font-size: 16px; }
+
+/* --- the woven hero field --- */
+.threadfield {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.lp__hero h1, .lp__sub { text-shadow: 0 2px 24px var(--bg); }
+:root[data-theme="light"] .threadfield { opacity: 0.5; }
+
+/* --- birth moment --- */
+.birth {
+  display: flex; align-items: center; gap: 18px;
+  margin: 14px 18px 4px;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--mint) 45%, var(--line));
+  background:
+    radial-gradient(120% 160% at 0% 50%, color-mix(in srgb, var(--mint) 12%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  box-shadow: 0 0 40px -14px var(--mint-glow);
+  position: relative;
+  overflow: visible;
+}
+.birth__forge { position: relative; width: 54px; height: 54px; flex: none; display: grid; place-items: center; }
+.birth__core {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--amber-hi), var(--amber-lo));
+  box-shadow: 0 0 22px var(--amber-glow), 0 0 44px var(--mint-glow);
+}
+.birth__spark {
+  position: absolute; left: 50%; top: 50%;
+  width: 5px; height: 5px; margin: -2.5px;
+  border-radius: 50%;
+  background: var(--amber-hi);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+.birth__body { flex: 1; min-width: 0; }
+.birth__name { font-size: 26px; line-height: 1.1; margin: 2px 0; }
+.birth__meta { font-size: 11.5px; color: var(--text-dim); letter-spacing: 0.02em; }
+
+/* --- CROO badge on graph nodes --- */
+.gnode__croo rect { fill: var(--bg-3); stroke: var(--amber); stroke-width: 0.8; }
+.gnode__croo text { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.08em; fill: var(--amber); }
+
+/* --- proof tree --- */
+.ptree { margin: 10px 18px 18px; border-top: 1px solid var(--line-soft); padding-top: 14px; }
+.ptree__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ptree__root {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border-radius: var(--r);
+  border: 1px solid var(--line); background: var(--bg-1);
+  font-size: 12px; text-align: left; transition: border-color .18s var(--ease);
+}
+.ptree__root:hover { border-color: var(--amber); }
+.ptree__rootlabel { color: var(--text-faint); text-transform: uppercase; letter-spacing: .14em; font-size: 10px; flex: none; }
+.ptree__hash { color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.ptree__copy { color: var(--text-dim); font-size: 11px; flex: none; }
+.ptree__leaves { list-style: none; overflow: hidden; }
+.ptree__leaf {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 4px; border-bottom: 1px solid var(--line-soft);
+  font-size: 12.5px;
+}
+.ptree__leaf b { color: var(--text-hi); font-weight: 600; }
+.ptree__role {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 4px; border: 1px solid currentColor; flex: none;
+}
+.ptree__role--hired { color: var(--amber); }
+.ptree__role--born { color: var(--mint); }
+.ptree__role--local { color: var(--text-dim); }
+.ptree__links { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.ptree__links a { color: var(--sky); font-family: var(--font-mono); font-size: 11px; }
+.ptree__links a:hover { text-decoration: underline; }
+.ptree__tee { color: var(--violet); font-family: var(--font-mono); font-size: 10.5px; }
+
+/* --- royalty flow dots (child → maker) --- */
+.royalty-flow { display: inline-flex; gap: 5px; align-items: center; }
+.royalty-flow span {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--amber);
+  animation: royaltydrift 1.6s ease-in-out infinite;
+}
+.royalty-flow span:nth-child(2) { animation-delay: 0.25s; }
+.royalty-flow span:nth-child(3) { animation-delay: 0.5s; }
+@keyframes royaltydrift {
+  0% { transform: translateX(6px); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(-6px); opacity: 0; }
+}

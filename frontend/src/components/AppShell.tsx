@@ -54,6 +54,15 @@ export function AppShell() {
       <div className="main">
         <header className="topbar">
           <div className="topbar__status">
+            <a
+              className="pill"
+              href="https://agent.croo.network/agents/58729a60-4a85-44c3-b7f0-654f3c1ee5db"
+              target="_blank"
+              rel="noreferrer"
+              title="Our live listing on the CROO Agent Store"
+            >
+              <span className="dot" style={{ background: "var(--amber)" }} /> Live on CROO Store ↗
+            </a>
             <span className="pill"><span className="dot" style={{ background: "var(--violet)" }} /> AI on 0G</span>
             <span className="pill"><span className="dot" style={{ background: "var(--sky)" }} /> Paid on Base · USDC</span>
           </div>
