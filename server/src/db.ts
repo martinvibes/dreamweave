@@ -86,7 +86,23 @@ async function migrate(db: Db): Promise<void> {
       payout_address TEXT,
       jobs_done     INT NOT NULL DEFAULT 0,
       earned_usdc   BIGINT NOT NULL DEFAULT 0,
+      parent_id     TEXT,
+      croo_service_id TEXT,
       created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
+  // Existing deployments predate the child-agent columns.
+  await db.query(`ALTER TABLE agents ADD COLUMN IF NOT EXISTS parent_id TEXT;`);
+  await db.query(`ALTER TABLE agents ADD COLUMN IF NOT EXISTS croo_service_id TEXT;`);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS royalty_ledger (
+      id             SERIAL PRIMARY KEY,
+      child_agent_id TEXT NOT NULL,
+      order_ref      TEXT NOT NULL,
+      amount_usdc    BIGINT NOT NULL,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
 
@@ -101,10 +117,16 @@ async function migrate(db: Db): Promise<void> {
       chain_dream_id BIGINT,
       tx_open        TEXT,
       tx_close       TEXT,
+      prooftree_root TEXT,
+      prooftree_leaves TEXT,
       created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+
+  // Existing deployments predate the prooftree columns.
+  await db.query(`ALTER TABLE dreams ADD COLUMN IF NOT EXISTS prooftree_root TEXT;`);
+  await db.query(`ALTER TABLE dreams ADD COLUMN IF NOT EXISTS prooftree_leaves TEXT;`);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS threads (

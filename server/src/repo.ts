@@ -26,6 +26,8 @@ export interface AgentRow {
   payoutAddress: string | null;
   jobsDone: number;
   earnedUsdc: bigint;
+  parentId: string | null;
+  crooServiceId: string | null;
   createdAt: string;
 }
 
@@ -47,6 +49,8 @@ export interface DreamRow {
   chainDreamId: bigint | null;
   txOpen: string | null;
   txClose: string | null;
+  prooftreeRoot: string | null;
+  prooftreeLeaves: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -105,6 +109,8 @@ function mapAgent(r: Record<string, unknown>): AgentRow {
     payoutAddress: (r.payout_address as string) ?? null,
     jobsDone: Number(r.jobs_done ?? 0),
     earnedUsdc: toBig(r.earned_usdc),
+    parentId: (r.parent_id as string) ?? null,
+    crooServiceId: (r.croo_service_id as string) ?? null,
     createdAt: String(r.created_at),
   };
 }
@@ -130,6 +136,8 @@ function mapDream(r: Record<string, unknown>): DreamRow {
     chainDreamId: r.chain_dream_id != null ? toBig(r.chain_dream_id) : null,
     txOpen: (r.tx_open as string) ?? null,
     txClose: (r.tx_close as string) ?? null,
+    prooftreeRoot: (r.prooftree_root as string) ?? null,
+    prooftreeLeaves: (r.prooftree_leaves as string) ?? null,
     createdAt: String(r.created_at),
     updatedAt: String(r.updated_at),
   };
@@ -184,6 +192,8 @@ export interface NewAgent {
   systemPrompt?: string | null;
   endpointUrl?: string | null;
   payoutAddress?: string | null;
+  parentId?: string | null;
+  crooServiceId?: string | null;
 }
 
 export async function createAgent(a: NewAgent): Promise<AgentRow> {
@@ -191,8 +201,9 @@ export async function createAgent(a: NewAgent): Promise<AgentRow> {
   const { rows } = await db.query(
     `INSERT INTO agents
        (id, owner, did, name, capability_id, title, price_usdc, tags,
-        reputation, runtime, system_prompt, endpoint_url, payout_address)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        reputation, runtime, system_prompt, endpoint_url, payout_address,
+        parent_id, croo_service_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [
       a.id,
@@ -208,6 +219,8 @@ export async function createAgent(a: NewAgent): Promise<AgentRow> {
       a.systemPrompt ?? null,
       a.endpointUrl ?? null,
       a.payoutAddress ?? null,
+      a.parentId ?? null,
+      a.crooServiceId ?? null,
     ],
   );
   return mapAgent(rows[0]!);
@@ -291,6 +304,8 @@ export async function updateDream(
     chainDreamId: bigint;
     txOpen: string;
     txClose: string;
+    prooftreeRoot: string;
+    prooftreeLeaves: string;
   }>,
 ): Promise<void> {
   const db = await getDb();
@@ -304,6 +319,10 @@ export async function updateDream(
     (sets.push(`chain_dream_id = $${i++}`), vals.push(patch.chainDreamId.toString()));
   if (patch.txOpen !== undefined) (sets.push(`tx_open = $${i++}`), vals.push(patch.txOpen));
   if (patch.txClose !== undefined) (sets.push(`tx_close = $${i++}`), vals.push(patch.txClose));
+  if (patch.prooftreeRoot !== undefined)
+    (sets.push(`prooftree_root = $${i++}`), vals.push(patch.prooftreeRoot));
+  if (patch.prooftreeLeaves !== undefined)
+    (sets.push(`prooftree_leaves = $${i++}`), vals.push(patch.prooftreeLeaves));
   if (sets.length === 0) return;
   sets.push(`updated_at = now()`);
   vals.push(id);
@@ -409,4 +428,37 @@ export async function platformStats(): Promise<{
     cleared: Number(c.rows[0]?.n ?? 0),
     settledUsdc: toBig(s.rows[0]?.s ?? "0"),
   };
+}
+
+// --- royalties ---------------------------------------------------------------
+
+export const ROYALTY_BPS = 1000; // 10% to the Foundry, forever
+
+export async function recordRoyalty(
+  childAgentId: string,
+  orderRef: string,
+  amountUsdc: bigint,
+): Promise<void> {
+  const db = await getDb();
+  await db.query(
+    `INSERT INTO royalty_ledger (child_agent_id, order_ref, amount_usdc)
+     VALUES ($1, $2, $3)`,
+    [childAgentId, orderRef, amountUsdc.toString()],
+  );
+}
+
+export async function listRoyalties(): Promise<
+  { childAgentId: string; orderRef: string; amountUsdc: bigint; createdAt: string }[]
+> {
+  const db = await getDb();
+  const { rows } = await db.query(
+    `SELECT child_agent_id, order_ref, amount_usdc, created_at
+     FROM royalty_ledger ORDER BY created_at DESC`,
+  );
+  return rows.map((r: Record<string, unknown>) => ({
+    childAgentId: String(r.child_agent_id),
+    orderRef: String(r.order_ref),
+    amountUsdc: BigInt(String(r.amount_usdc)),
+    createdAt: String(r.created_at),
+  }));
 }

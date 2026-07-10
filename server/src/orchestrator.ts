@@ -19,12 +19,18 @@ import {
   SimCapClient,
   verifyInlineArtifact,
   formatUsdc,
+  hashArtifact,
   OrderPhase,
   type DeliveryProof,
 } from "../../src/index.js";
 import { executeAgent } from "./agentRunner.js";
 import { planDream, type CrewPlan } from "./planner.js";
 import { publish, finish } from "./events.js";
+import { resolveCapability } from "./catalog.js";
+import { hireService, type HireResult } from "./croo.js";
+import { birthAgent } from "./foundry.js";
+import { computeRoot, type ProofLeaf } from "./prooftree.js";
+import { config } from "./config.js";
 import {
   bestAgentFor,
   createThread,
@@ -56,6 +62,33 @@ export async function makePlan(goal: string): Promise<{
   return { plan, crew, totalUsdc };
 }
 
+/** Store-hire path for one subtask. Exported for tests (deps injected). */
+export async function _runStoreSubtask(
+  deps: {
+    hire: (opts: { serviceId: string; requirements: string }) => Promise<HireResult>;
+    emit: (phase: string, extra?: Record<string, unknown>) => void;
+  },
+  ctx: { serviceId: string; name: string; requirements: string },
+): Promise<ProofLeaf> {
+  deps.emit("negotiate");
+  const hired = await deps.hire({
+    serviceId: ctx.serviceId,
+    requirements: ctx.requirements,
+  });
+  deps.emit("lock", { payTxHash: hired.payTxHash });
+  deps.emit("deliver");
+  const leaf: ProofLeaf = {
+    orderId: hired.orderId,
+    serviceId: ctx.serviceId,
+    agent: ctx.name,
+    role: "hired",
+    deliverableHash: hashArtifact(hired.deliverableText),
+    payTxHash: hired.payTxHash,
+  };
+  deps.emit("clear", { settlementRef: hired.orderId });
+  return leaf;
+}
+
 /**
  * Execute a planned dream. Streams events to the dream's SSE channel and
  * persists results. Runs in the background (caller does not await).
@@ -85,10 +118,55 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
 
   let spent = 0n;
 
+  const leaves: ProofLeaf[] = [];
+
   for (let i = 0; i < plan.subtasks.length; i++) {
     const sub = plan.subtasks[i]!;
-    const agent = await bestAgentFor(sub.capabilityId);
-    if (!agent) {
+    let resolution = await resolveCapability(sub.capabilityId);
+
+    // Genesis: nobody offers this skill — the Foundry births someone who does.
+    if (resolution.kind === "missing" && config.croo.live) {
+      publish(dreamId, {
+        type: "log",
+        level: "warn",
+        text: `no agent offers ${sub.capabilityId} — commissioning the Foundry`,
+      });
+      try {
+        const born = await birthAgent({ capabilityId: sub.capabilityId, brief: sub.brief });
+        publish(dreamId, {
+          type: "birth",
+          agent: {
+            name: born.agent.name,
+            capabilityId: sub.capabilityId,
+            storeUrl:
+              born.serviceId === "local"
+                ? null
+                : `https://agent.croo.network/agents/${born.sdkKey ? born.agent.crooServiceId ?? born.serviceId : born.serviceId}`,
+          },
+        });
+        publish(dreamId, {
+          type: "log",
+          level: "value",
+          text: `birth · ${born.agent.name} born for ${sub.capabilityId}${born.serviceId !== "local" ? " — live on the CROO store" : ""}`,
+        });
+        resolution =
+          born.serviceId === "local"
+            ? { kind: "local", agent: born.agent }
+            : {
+                kind: "store",
+                serviceId: born.serviceId,
+                name: born.agent.name,
+                priceUsdc: born.agent.priceUsdc,
+              };
+      } catch (err) {
+        publish(dreamId, {
+          type: "log",
+          level: "warn",
+          text: `foundry failed for ${sub.capabilityId}: ${(err as Error).message}`,
+        });
+      }
+    }
+    if (resolution.kind === "missing") {
       publish(dreamId, {
         type: "log",
         level: "warn",
@@ -98,6 +176,102 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
     }
 
     const threadId = `${dreamId}-t${i}`;
+
+    // ---- store path: a real CROO order to a real (or newborn) agent -------
+    if (resolution.kind === "store") {
+      const { serviceId, name, priceUsdc } = resolution;
+      if (spent + priceUsdc > dream.budgetUsdc) {
+        publish(dreamId, {
+          type: "log",
+          level: "warn",
+          text: `budget exhausted — skipping ${name} (${formatUsdc(priceUsdc)} USDC)`,
+        });
+        continue;
+      }
+      await createThread({
+        id: threadId,
+        dreamId,
+        agentId: serviceId,
+        sellerName: name,
+        capabilityId: sub.capabilityId,
+        brief: sub.brief,
+        priceUsdc,
+        idx: i,
+      });
+      const emitStorePhase = (phase: string, extra: Record<string, unknown> = {}) => {
+        publish(dreamId, {
+          type: "thread",
+          thread: {
+            id: threadId,
+            idx: i,
+            sellerName: name,
+            capabilityId: sub.capabilityId,
+            priceUsdc: formatUsdc(priceUsdc),
+            phase,
+            store: true,
+            ...extra,
+          },
+        });
+      };
+      try {
+        await updateThread(threadId, { phase: "match" });
+        emitStorePhase("match");
+        publish(dreamId, {
+          type: "log",
+          level: "info",
+          text: `match · ${name} on the CROO store for ${sub.capabilityId} @ ${formatUsdc(priceUsdc)} USDC`,
+        });
+        let deliveredText = "";
+        const leaf = await _runStoreSubtask(
+          {
+            hire: async (o) => {
+              const r = await hireService(o);
+              deliveredText = r.deliverableText;
+              return r;
+            },
+            emit: async (phase, extra = {}) => {
+              await updateThread(threadId, { phase: phase as never });
+              emitStorePhase(phase, extra);
+            },
+          },
+          { serviceId, name, requirements: sub.brief },
+        );
+        leaves.push(leaf);
+        spent += priceUsdc;
+        await updateThread(threadId, {
+          phase: "clear",
+          artifact: deliveredText,
+          proofHash: leaf.deliverableHash,
+          settlementRef: leaf.orderId,
+          ...(leaf.payTxHash ? { txHash: leaf.payTxHash } : {}),
+        });
+        publish(dreamId, {
+          type: "settle",
+          threadId,
+          sellerName: name,
+          amountUsdc: formatUsdc(priceUsdc),
+          settlementRef: leaf.orderId,
+          txHash: leaf.payTxHash,
+        });
+        publish(dreamId, {
+          type: "log",
+          level: "value",
+          text: `clear · ${formatUsdc(priceUsdc)} USDC paid to ${name} on CROO · order ${leaf.orderId.slice(0, 8)}…`,
+        });
+      } catch (err) {
+        await updateThread(threadId, { phase: "void" });
+        emitStorePhase("void");
+        publish(dreamId, {
+          type: "log",
+          level: "warn",
+          text: `void · store hire failed for ${name}: ${(err as Error).message}`,
+        });
+      }
+      continue;
+    }
+
+    // ---- local path: our own agent through the in-process CAP engine ------
+    const agent = resolution.agent;
     await createThread({
       id: threadId,
       dreamId,
@@ -216,6 +390,14 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
       const settlementRef = order.settlementRef ?? "";
 
       spent += agent.priceUsdc;
+      leaves.push({
+        orderId: order.id,
+        serviceId: agent.crooServiceId ?? "sim",
+        agent: agent.name,
+        role: agent.parentId === "foundry" ? "born" : "local",
+        deliverableHash: delivery.resultHash,
+        teeAttestation: delivery.teeProof,
+      });
       await updateThread(threadId, {
         phase: "clear",
         settlementRef,
@@ -245,8 +427,22 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
     }
   }
 
+  // One fingerprint over every sub-job — ships inside the CAP delivery.
+  const root = computeRoot(leaves);
+  publish(dreamId, { type: "prooftree", root, leaves });
+  publish(dreamId, {
+    type: "log",
+    level: "value",
+    text: `prooftree · root ${root.slice(0, 22)}… over ${leaves.length} verified deliveries`,
+  });
+
   const refunded = dream.budgetUsdc - spent;
-  await updateDream(dreamId, { status: "settled", spentUsdc: spent });
+  await updateDream(dreamId, {
+    status: "settled",
+    spentUsdc: spent,
+    prooftreeRoot: root,
+    prooftreeLeaves: JSON.stringify(leaves),
+  });
   publish(dreamId, {
     type: "log",
     level: "value",
