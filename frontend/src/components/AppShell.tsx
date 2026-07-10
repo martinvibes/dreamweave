@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthProvider";
+import { ThemeToggle } from "@/theme/ThemeProvider";
 import { Logo } from "./Logo";
 
 const NAV = [
@@ -53,9 +54,11 @@ export function AppShell() {
       <div className="main">
         <header className="topbar">
           <div className="topbar__status">
-            <span className="pill pill--live"><span className="dot" /> 0G · Base · USDC</span>
+            <span className="pill"><span className="dot" style={{ background: "var(--violet)" }} /> AI on 0G</span>
+            <span className="pill"><span className="dot" style={{ background: "var(--sky)" }} /> Paid on Base · USDC</span>
           </div>
           <div className="topbar__acct">
+            <ThemeToggle />
             {ready && authenticated ? (
               <>
                 <span className="acct-chip mono">

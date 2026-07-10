@@ -30,7 +30,7 @@ import { resolveUser } from "./src/auth.js";
 import { subscribe } from "./src/events.js";
 import { makePlan, weaveDream } from "./src/orchestrator.js";
 import { llmConfigured } from "./src/llm.js";
-import { chainConfigured } from "./src/chain.js";
+import { chainConfigured, usdcBalanceOf } from "./src/chain.js";
 import { executeAgent } from "./src/agentRunner.js";
 import { formatUsdc, usdc } from "../src/index.js";
 import {
@@ -135,6 +135,19 @@ const server = createServer(async (req, res) => {
     if (method === "GET" && path === "/.well-known/dreamweave.json") {
       const agents = await listAgents();
       return send(res, 200, manifest(agents));
+    }
+
+    // wallet USDC balance on Base (real on-chain read)
+    const bal = path.match(/^\/api\/wallet\/([^/]+)\/usdc$/);
+    if (method === "GET" && bal) {
+      const address = decodeURIComponent(bal[1]!);
+      const units = await usdcBalanceOf(address);
+      return send(res, 200, {
+        address,
+        chainId: config.chain.id,
+        balanceUsdc: formatUsdc(units),
+        balanceUnits: units.toString(),
+      });
     }
 
     // ---- A2A: hire one agent ----

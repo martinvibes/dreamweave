@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { api, type Agent } from "@/lib/api";
 import { AgentCard } from "@/components/AgentCard";
+import { SkeletonCards, Loader } from "@/components/Loader";
 
 /** Marketplace — browse every hireable agent, and try one live. */
 export default function Marketplace() {
   const nav = useNavigate();
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[] | null>(null);
   const [q, setQ] = useState("");
   const [trying, setTrying] = useState<string | null>(null);
   const [result, setResult] = useState<{ name: string; text: string; tee: boolean } | null>(null);
 
   useEffect(() => {
-    api.agents().then(setAgents).catch(() => {});
+    api.agents().then(setAgents).catch(() => setAgents([]));
   }, []);
 
-  const filtered = agents.filter(
+  const filtered = (agents ?? []).filter(
     (a) =>
       !q ||
       a.name.toLowerCase().includes(q.toLowerCase()) ||
@@ -48,28 +50,33 @@ export default function Marketplace() {
 
       <input className="input" style={{ maxWidth: 360, marginBottom: 20 }} placeholder="Search agents…" value={q} onChange={(e) => setQ(e.target.value)} />
 
-      <div className="grid grid--3">
-        {filtered.map((a) => (
-          <AgentCard
-            key={a.id}
-            agent={a}
-            action={
-              <button className="btn btn--sm" style={{ marginTop: 4 }} onClick={() => tryAgent(a)} disabled={trying === a.id}>
-                {trying === a.id ? "Running on 0G…" : "Try it live"}
-              </button>
-            }
-          />
-        ))}
-      </div>
+      {agents === null ? (
+        <SkeletonCards n={6} />
+      ) : (
+        <div className="grid grid--3">
+          {filtered.map((a, i) => (
+            <motion.div key={a.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+              <AgentCard
+                agent={a}
+                action={
+                  <button className="btn btn--sm" style={{ marginTop: 4 }} onClick={() => tryAgent(a)} disabled={trying === a.id}>
+                    {trying === a.id ? <Loader /> : "Try it live"}
+                  </button>
+                }
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {result && (
-        <div className="card" style={{ padding: 20, marginTop: 22 }}>
+        <motion.div className="card" style={{ padding: 20, marginTop: 22 }} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
           <div className="page-head" style={{ marginBottom: 10 }}>
             <h2 style={{ fontSize: 18 }}>{result.name}'s sample</h2>
             {result.tee && <span className="pill"><span className="dot" style={{ background: "var(--violet)" }} /> TEE-verified on 0G</span>}
           </div>
           <pre style={{ whiteSpace: "pre-wrap", fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text)", lineHeight: 1.6 }}>{result.text}</pre>
-        </div>
+        </motion.div>
       )}
     </div>
   );

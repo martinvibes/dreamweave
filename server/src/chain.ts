@@ -59,7 +59,35 @@ const ERC20_ABI = [
     ],
     outputs: [{ name: "", type: "bool" }],
   },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
+
+/** Read a wallet's USDC balance on the configured chain (base units). Returns
+ *  0n if the read fails so the UI degrades gracefully. */
+export async function usdcBalanceOf(address: string): Promise<bigint> {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) return 0n;
+  try {
+    const { createPublicClient, http } = await import("viem");
+    const { baseSepolia, base } = await import("viem/chains");
+    const chain = config.chain.id === 8453 ? base : baseSepolia;
+    const pub = createPublicClient({ chain, transport: http(config.chain.rpcUrl) });
+    const bal = (await pub.readContract({
+      address: config.chain.usdc as `0x${string}`,
+      abi: ERC20_ABI,
+      functionName: "balanceOf",
+      args: [address as `0x${string}`],
+    })) as bigint;
+    return bal;
+  } catch {
+    return 0n;
+  }
+}
 
 export function chainConfigured(): boolean {
   return Boolean(

@@ -53,10 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         appearance: {
           theme: "dark",
           accentColor: "#ffb020",
-          logo: undefined,
+          walletChainType: "ethereum-only",
         },
         embeddedWallets: { createOnLogin: "users-without-wallets" },
-        loginMethods: ["email", "wallet", "google"],
+        // email + wallet work with zero extra dashboard config; add "google"
+        // in code once it's enabled in the Privy dashboard OAuth settings.
+        loginMethods: ["email", "wallet"],
       }}
     >
       <Bridge>{children}</Bridge>

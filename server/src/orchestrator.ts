@@ -79,7 +79,7 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
   publish(dreamId, {
     type: "plan",
     goal: dream.goal,
-    budgetUsdc: dream.budgetUsdc,
+    budgetUsdc: formatUsdc(dream.budgetUsdc),
     planner: plan.planner,
     subtasks: plan.subtasks.length,
   });
@@ -134,7 +134,7 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
           idx: i,
           sellerName: agent.name,
           capabilityId: sub.capabilityId,
-          priceUsdc: agent.priceUsdc,
+          priceUsdc: formatUsdc(agent.priceUsdc),
           phase,
           ...extra,
         },
@@ -238,7 +238,7 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
         type: "settle",
         threadId,
         sellerName: agent.name,
-        amountUsdc: agent.priceUsdc,
+        amountUsdc: formatUsdc(agent.priceUsdc),
         settlementRef,
         txHash,
       });
@@ -267,9 +267,9 @@ export async function weaveDream(dreamId: string, plan: CrewPlan): Promise<void>
   });
   publish(dreamId, {
     type: "done",
-    spentUsdc: spent,
-    refundedUsdc: refunded,
-    budgetUsdc: dream.budgetUsdc,
+    spentUsdc: formatUsdc(spent),
+    refundedUsdc: formatUsdc(refunded),
+    budgetUsdc: formatUsdc(dream.budgetUsdc),
   });
   finish(dreamId);
 }

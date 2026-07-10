@@ -146,6 +146,11 @@ export const api = {
   myProjects: () => req<{ dreams: DreamSummary[] }>("/api/dreams").then((r) => r.dreams),
   project: (id: string) => req<DreamDetail>(`/api/dreams/${id}`),
 
+  walletBalance: (address: string) =>
+    req<{ address: string; chainId: number; balanceUsdc: string; balanceUnits: string }>(
+      `/api/wallet/${encodeURIComponent(address)}/usdc`,
+    ),
+
   hireAgent: (capabilityId: string, brief: string) =>
     req<{
       agent: string;

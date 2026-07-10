@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
+import { ThemeProvider } from "./theme/ThemeProvider";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Agents from "./pages/Agents";
@@ -17,22 +18,25 @@ import "./styles/app.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route element={<AppShell />}>
-            <Route path="/app" element={<Dashboard />} />
-            <Route path="/app/new" element={<NewProject />} />
-            <Route path="/app/projects" element={<Projects />} />
-            <Route path="/app/projects/:id" element={<ProjectDetail />} />
-            <Route path="/app/agents" element={<Agents />} />
-            <Route path="/app/agents/new" element={<DeployAgent />} />
-            <Route path="/app/marketplace" element={<Marketplace />} />
-            <Route path="/app/payments" element={<Payments />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route element={<AppShell />}>
+              <Route path="/app" element={<Dashboard />} />
+              <Route path="/app/new" element={<NewProject />} />
+              <Route path="/app/projects" element={<Projects />} />
+              <Route path="/app/projects/:id" element={<ProjectDetail />} />
+              <Route path="/app/agents" element={<Agents />} />
+              <Route path="/app/agents/new" element={<DeployAgent />} />
+              <Route path="/app/marketplace" element={<Marketplace />} />
+              <Route path="/app/payments" element={<Payments />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>,
 );
+
