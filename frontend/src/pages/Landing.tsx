@@ -44,6 +44,7 @@ export default function Landing() {
         <nav className="lp__links">
           <a href="#how">How it works</a>
           <a href="#why">Why us</a>
+          <Link to="/proof">Proof</Link>
           <a href="https://github.com/martinvibes/dreamweave" target="_blank" rel="noreferrer">GitHub</a>
         </nav>
         <div className="lp__nav-right">
@@ -188,7 +189,7 @@ export default function Landing() {
 
       <footer className="lp__foot wrap">
         <div className="lp__brand"><Logo size={22} /> <span>DreamWeave</span></div>
-        <span className="dim mono">AI on 0G · settled on Base · USDC — built for the CROO Agent Hackathon · MIT</span>
+        <span className="dim mono"><Link to="/proof" style={{ color: "var(--amber)" }}>live proof</Link> · AI on 0G · settled on Base · USDC — CROO Agent Hackathon · MIT</span>
       </footer>
     </div>
   );

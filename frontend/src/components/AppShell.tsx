@@ -7,7 +7,6 @@ const NAV = [
   { to: "/app", label: "Dashboard", end: true, icon: iconGrid },
   { to: "/app/projects", label: "Projects", icon: iconStack },
   { to: "/app/agents", label: "Agents", icon: iconUsers },
-  { to: "/app/marketplace", label: "Marketplace", icon: iconStore },
   { to: "/app/payments", label: "Payments", icon: iconCoin },
 ];
 
@@ -45,6 +44,9 @@ export function AppShell() {
           <a className="side__mini" href="https://github.com/martinvibes/dreamweave" target="_blank" rel="noreferrer">
             GitHub ↗
           </a>
+          <a className="side__mini" href="/proof" target="_blank" rel="noreferrer">
+            Public proof ↗
+          </a>
           <a className="side__mini" href="/.well-known/dreamweave.json" target="_blank" rel="noreferrer">
             Agent API ↗
           </a>
@@ -73,9 +75,6 @@ export function AppShell() {
                 <span className="acct-chip mono">
                   {wallet ? short(wallet) : connected ? short(userId ?? "") : "guest"}
                 </span>
-                {!connected && (
-                  <button className="btn btn--sm" onClick={login}>Connect wallet</button>
-                )}
                 <button className="btn btn--sm btn--ghost" onClick={logout}>Sign out</button>
               </>
             ) : (
@@ -118,13 +117,6 @@ function iconUsers() {
   return (
     <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.6">
       <circle cx="7.5" cy="7" r="2.6" /><path d="M3 16c0-2.5 2-4 4.5-4S12 13.5 12 16" /><path d="M13 7.2a2.4 2.4 0 010 4.6M14 16c0-2 -1-3.3-2.4-3.8" />
-    </svg>
-  );
-}
-function iconStore() {
-  return (
-    <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M3 8l1-4h12l1 4M3 8v8h14V8M3 8h14" /><path d="M8 16v-4h4v4" />
     </svg>
   );
 }

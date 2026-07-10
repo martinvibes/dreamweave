@@ -32,6 +32,7 @@ import { makePlan, weaveDream } from "./src/orchestrator.js";
 import { llmConfigured } from "./src/llm.js";
 import { usdcBalanceOf } from "./src/usdc.js";
 import { startWeaverProvider } from "./src/weaverProvider.js";
+import { getProofSnapshot } from "./src/proof.js";
 import { executeAgent } from "./src/agentRunner.js";
 import { formatUsdc, usdc } from "../src/index.js";
 import {
@@ -150,6 +151,11 @@ const server = createServer(async (req, res) => {
         balanceUsdc: formatUsdc(units),
         balanceUnits: units.toString(),
       });
+    }
+
+    // public proof snapshot — live CROO orders + births + royalties + roots
+    if (method === "GET" && path === "/api/proof") {
+      return send(res, 200, await getProofSnapshot());
     }
 
     // royalty ledger — what born agents owe the Foundry

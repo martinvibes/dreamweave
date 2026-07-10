@@ -536,3 +536,49 @@
 .nf__body h1 { font-size: clamp(30px, 5vw, 52px); margin-bottom: 12px; }
 .nf__body p { color: var(--text-dim); }
 .nf__cta { display: flex; gap: 12px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }
+
+/* --- public proof page --- */
+.proof { min-height: 100vh; display: flex; flex-direction: column; }
+.proof__body { flex: 1; padding-top: 46px; padding-bottom: 70px; }
+.proof__body h1 { font-size: clamp(40px, 6vw, 68px); margin: 18px 0 14px; }
+.proof__sub { max-width: 62ch; font-size: 16px; line-height: 1.7; }
+.proof__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin: 36px 0 40px;
+}
+.proof__tiles .tile { padding: 22px 20px; }
+.proof__tiles .tile__v { font-family: var(--font-display); font-weight: 800; font-size: 36px; color: var(--text-hi); }
+.proof__tiles .tile--mint .tile__v { color: var(--mint); }
+.proof__tiles .tile__k { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); margin-top: 5px; }
+
+.proof__births { margin-bottom: 36px; }
+.proof__birthrow { display: flex; gap: 12px; flex-wrap: wrap; }
+.proof__birth {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 16px; font-size: 13.5px;
+  transition: border-color .2s var(--ease), transform .2s var(--ease);
+}
+.proof__birth:hover { border-color: var(--mint); transform: translateY(-2px); }
+.proof__birthdot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px var(--mint-glow); animation: blink 1.8s ease-in-out infinite; }
+
+.proof__ledger { padding: 6px 18px 10px; overflow-x: auto; }
+.proof__ledgerhead, .proof__row {
+  display: grid;
+  grid-template-columns: 110px 70px 1fr 90px 120px 110px;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 4px;
+  font-size: 12px;
+  min-width: 620px;
+}
+.proof__ledgerhead { color: var(--text-faint); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; border-bottom: 1px solid var(--line); }
+.proof__row { border-bottom: 1px solid var(--line-soft); }
+.proof__row:last-child { border-bottom: none; }
+
+.proof__root {
+  display: flex; gap: 16px; align-items: center;
+  padding: 10px 4px; font-size: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
