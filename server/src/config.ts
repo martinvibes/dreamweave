@@ -4,6 +4,15 @@
  * secrets arrive via env vars only.
  */
 
+import { fileURLToPath } from "node:url";
+
+// Load repo-root .env if present (real env vars always win). Node built-in.
+try {
+  process.loadEnvFile(fileURLToPath(new URL("../../.env", import.meta.url)));
+} catch {
+  /* no .env file — prod supplies real env vars */
+}
+
 function env(key: string, fallback?: string): string {
   const v = process.env[key];
   if (v === undefined || v === "") {
@@ -53,6 +62,18 @@ export const config = {
     issuer: env("PRIVY_ISSUER", "privy.io"),
     // If empty, auth runs in permissive dev mode (documented, never in prod).
     verifyTokens: bool("PRIVY_VERIFY", false),
+  },
+
+  // --- CROO (real store) ---
+  croo: {
+    apiUrl: env("CROO_API_URL", "https://api.croo.network"),
+    wsUrl: env("CROO_WS_URL", "wss://api.croo.network/ws"),
+    sdkKey: env("CROO_SDK_KEY"),
+    agentId: env("CROO_AGENT_ID"),
+    // Live mode: real store, real USDC. Off = local sim (dev).
+    get live() {
+      return Boolean(this.sdkKey);
+    },
   },
 
   // --- chain (Base) ---
