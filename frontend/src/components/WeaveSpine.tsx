@@ -11,6 +11,7 @@ export function WeaveSpine({ containerRef }: { containerRef: RefObject<HTMLEleme
   const { scrollYProgress } = useScroll({
     target: containerRef as RefObject<HTMLElement>,
     offset: ["start start", "end 0.9"],
+    layoutEffect: false, // ref lives in the parent; avoids hydration warning
   });
   const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.4 });
 

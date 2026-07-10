@@ -385,3 +385,65 @@
   box-shadow: 0 18px 44px -18px var(--mint-glow);
 }
 .lp__why-card { background: var(--bg-glass); backdrop-filter: blur(10px); }
+
+/* --- shine sweep on CTAs --- */
+.btn--shine { position: relative; overflow: hidden; }
+.btn--shine::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; width: 40%;
+  left: -60%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.05s;
+  pointer-events: none;
+}
+.btn--shine:hover::after { left: 130%; transition: left 0.55s var(--ease); }
+
+/* --- chapter glyphs: tiny living vignettes --- */
+.lp__step-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.lp__glyph { width: 40px; height: 40px; opacity: 0.85; }
+.lp__step:hover .lp__glyph { opacity: 1; }
+
+.glyph-draw {
+  stroke-dashoffset: 0;
+  animation: glyphdraw 3.4s linear infinite;
+}
+@keyframes glyphdraw { to { stroke-dashoffset: -32; } }
+
+.glyph-core { animation: glyphpulse 1.8s ease-in-out infinite; transform-origin: 22px 22px; }
+@keyframes glyphpulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: 0.75; } }
+.glyph-spark { animation: glyphspark 1.8s ease-in-out infinite; }
+@keyframes glyphspark { 0%,100% { opacity: 0.15; } 50% { opacity: 1; } }
+
+.glyph-seal { transform-origin: 22px 22px; animation: glyphseal 3s var(--ease) infinite; }
+.glyph-check {
+  stroke-dasharray: 20;
+  animation: glyphcheck 3s var(--ease) infinite;
+}
+@keyframes glyphseal { 0%,15% { transform: scale(0.92); opacity: 0.6; } 30%,80% { transform: scale(1); opacity: 1; } 95%,100% { transform: scale(0.92); opacity: 0.6; } }
+@keyframes glyphcheck { 0%,20% { stroke-dashoffset: 20; } 45%,80% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 20; } }
+
+/* --- marquee: the ticker of what's true --- */
+.lp__marquee {
+  overflow: hidden;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 14px 0;
+  position: relative;
+  z-index: 1;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+}
+.lp__marquee-track {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  animation: marquee 36s linear infinite;
+}
+.lp__marquee:hover .lp__marquee-track { animation-play-state: paused; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .lp__marquee-track { animation: none; } }
