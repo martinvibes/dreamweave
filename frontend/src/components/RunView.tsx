@@ -1,6 +1,6 @@
-import { useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import type { RunState, RunTask } from "@/lib/useRun";
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { Birth, ProofTree, RunState, RunTask } from "@/lib/useRun";
 
 /**
  * RunView — the live activity view. Project on the left, each hired agent on the
@@ -19,6 +19,11 @@ export function RunView({ run }: { run: RunState }) {
             {run.running ? "running" : run.done ? "complete" : "idle"}
           </span>
         </div>
+        <AnimatePresence initial={false}>
+          {run.births.map((b) => (
+            <BirthCard key={b.id} birth={b} />
+          ))}
+        </AnimatePresence>
         <AnimatePresence mode="wait">
           {run.done ? (
             <FinishCard key="finish" run={run} />
@@ -26,6 +31,9 @@ export function RunView({ run }: { run: RunState }) {
             <RunGraph key="graph" tasks={run.tasks} />
           )}
         </AnimatePresence>
+        {run.prooftree && run.prooftree.leaves.length > 0 && (
+          <ProofTreePanel tree={run.prooftree} />
+        )}
       </div>
 
       <div className="side-col">
@@ -144,9 +152,128 @@ function RunGraph({ tasks }: { tasks: RunTask[] }) {
           <text className="gnode__i" x={x} y={y + 5} textAnchor="middle" fontSize="15">{t.sellerName.charAt(0)}</text>
           <text className="gnode__name" x={x + 35} y={y - 2}>{t.sellerName}</text>
           <text className="gnode__meta" x={x + 35} y={y + 12}>${t.priceUsdc} · {t.phase === "clear" ? "paid" : t.phase}</text>
+          {t.store && (
+            <g className="gnode__croo">
+              <rect x={x - 44} y={y - 8} width={34} height={16} rx={4} />
+              <text x={x - 27} y={y + 3.5} textAnchor="middle">CROO</text>
+            </g>
+          )}
         </motion.g>
       ))}
     </motion.svg>
+  );
+}
+
+/**
+ * The birth moment — a brand-new agent just came into existence on the store.
+ * Big enough to carry the demo video: forge burst, name in display type, and
+ * a live link to the newborn's real store page.
+ */
+function BirthCard({ birth }: { birth: Birth }) {
+  const reduced = useReducedMotion();
+  const sparks = useMemo(
+    () => Array.from({ length: 14 }, (_, i) => ({
+      angle: (i / 14) * Math.PI * 2,
+      dist: 46 + (i % 3) * 22,
+      delay: 0.18 + (i % 5) * 0.05,
+    })),
+    [],
+  );
+  return (
+    <motion.div
+      className="birth"
+      initial={{ opacity: 0, scale: 0.92, y: 14 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ type: "spring", stiffness: 240, damping: 22 }}
+    >
+      <div className="birth__forge" aria-hidden>
+        <motion.span
+          className="birth__core"
+          initial={{ scale: 0 }}
+          animate={reduced ? { scale: 1 } : { scale: [0, 1.5, 1] }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        />
+        {!reduced &&
+          sparks.map((s, i) => (
+            <motion.span
+              key={i}
+              className="birth__spark"
+              initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+              animate={{
+                x: Math.cos(s.angle) * s.dist,
+                y: Math.sin(s.angle) * s.dist,
+                opacity: 0,
+                scale: 0.3,
+              }}
+              transition={{ duration: 0.9, delay: s.delay, ease: "easeOut" }}
+            />
+          ))}
+      </div>
+      <div className="birth__body">
+        <div className="eyebrow" style={{ color: "var(--mint)" }}>agent born</div>
+        <h3 className="birth__name">{birth.name}</h3>
+        <p className="birth__meta mono">
+          new specialist · {birth.capabilityId} · created &amp; hired seconds after it began to exist
+        </p>
+      </div>
+      {birth.storeUrl && (
+        <a className="btn btn--sm" href={birth.storeUrl} target="_blank" rel="noreferrer">
+          see it live on the CROO store ↗
+        </a>
+      )}
+    </motion.div>
+  );
+}
+
+/** One root hash, every receipt underneath it. */
+function ProofTreePanel({ tree }: { tree: ProofTree }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(tree.root).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+  };
+  return (
+    <motion.div className="ptree" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <div className="ptree__head">
+        <span className="panel__t">Proof of everything</span>
+        <button className="btn btn--sm btn--ghost" onClick={() => setOpen((o) => !o)}>
+          {open ? "hide" : `${tree.leaves.length} receipts`} {open ? "▴" : "▾"}
+        </button>
+      </div>
+      <button className="ptree__root mono" onClick={copy} title="copy root hash">
+        <span className="ptree__rootlabel">root</span>
+        <span className="ptree__hash">{tree.root}</span>
+        <span className="ptree__copy">{copied ? "copied ✓" : "copy"}</span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            className="ptree__leaves"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {tree.leaves.map((l) => (
+              <li key={l.orderId + l.agent} className="ptree__leaf">
+                <span className={`ptree__role ptree__role--${l.role}`}>{l.role}</span>
+                <b>{l.agent}</b>
+                <span className="mono dim">{l.deliverableHash.slice(0, 14)}…</span>
+                <span className="ptree__links">
+                  {l.teeAttestation && <span className="ptree__tee" title="TEE-attested execution">⬡ TEE</span>}
+                  {l.payTxHash && (
+                    <a href={`https://basescan.org/tx/${l.payTxHash}`} target="_blank" rel="noreferrer">tx ↗</a>
+                  )}
+                </span>
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -162,6 +289,9 @@ function FinishCard({ run }: { run: RunState }) {
       <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>Project delivered</motion.h2>
       <motion.p className="dim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
         {cleared} agents finished, verified, and paid on Base.
+        {run.births.length > 0 && (
+          <> {run.births.length === 1 ? "One of them" : `${run.births.length} of them`} didn't exist when this project started.</>
+        )}
       </motion.p>
       <motion.div className="finish__sum" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
         <div className="finish__stat"><b style={{ color: "var(--mint)" }}>${run.spentUsdc}</b><span>spent</span></div>
