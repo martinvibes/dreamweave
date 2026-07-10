@@ -77,6 +77,20 @@ test("provider: accepts negotiation, runs job on order_paid, delivers", async ()
   );
 });
 
+test("hire: schema deliveries fall back to deliverableSchema", async () => {
+  const { client } = makeFake();
+  (client as { getDelivery: unknown }).getDelivery = async () => ({
+    deliverableText: "",
+    deliverableSchema: '{"value": 23}',
+  });
+  const result = await _hireWithClient(client as never, {
+    serviceId: "svc-1",
+    requirements: "x",
+    timeoutMs: 2000,
+  });
+  assert.equal(result.deliverableText, '{"value": 23}');
+});
+
 test("hire: rejects on timeout", async () => {
   const { client } = makeFake();
   (client as { negotiateOrder: unknown }).negotiateOrder = async () => ({

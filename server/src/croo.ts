@@ -86,14 +86,17 @@ export async function _hireWithClient(
       stream.on("order_completed", async (e) => {
         if (e.order_id !== orderId || !orderId) return;
         try {
-          const d = await client.getDelivery(orderId);
+          const d = (await client.getDelivery(orderId)) as {
+            deliverableText?: string;
+            deliverableSchema?: string;
+          };
           clearTimeout(timer);
           resolve({
             orderId,
             serviceId: opts.serviceId,
-            deliverableText: String(
-              (d as { deliverableText?: string }).deliverableText ?? "",
-            ),
+            // "text" deliveries use deliverableText; "schema" deliveries
+            // carry their JSON payload in deliverableSchema.
+            deliverableText: String(d.deliverableText || d.deliverableSchema || ""),
             payTxHash,
           });
         } catch (err) {
