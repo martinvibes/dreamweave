@@ -243,8 +243,9 @@
   height: 100%;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.75;
+  opacity: 0.55;
 }
+.lp__hero h1, .lp__sub { text-shadow: 0 2px 24px var(--bg); }
 :root[data-theme="light"] .threadfield { opacity: 0.5; }
 
 /* --- birth moment --- */

@@ -13,12 +13,12 @@ export function ThreadField() {
   const threads = useMemo(
     () =>
       [
-        [60, -30, 236, 0.0, 0.30],
-        [130, 20, 244, 0.25, 0.38],
-        [210, -14, 250, 0.5, 0.46],
-        [300, 26, 256, 0.75, 0.38],
-        [380, -20, 262, 1.0, 0.30],
-        [440, 30, 268, 1.25, 0.24],
+        [100, -30, 304, 0.0, 0.30],
+        [170, 20, 312, 0.25, 0.38],
+        [250, -14, 318, 0.5, 0.46],
+        [340, 26, 324, 0.75, 0.38],
+        [420, -20, 330, 1.0, 0.30],
+        [470, 30, 336, 1.25, 0.24],
       ] as const,
     [],
   );
@@ -54,7 +54,7 @@ export function ThreadField() {
       {threads.map(([y0, sag, yHub, delay, op], i) => (
         <motion.path
           key={i}
-          d={`M -40 ${y0} C 280 ${y0 + sag}, 520 ${yHub + (y0 - yHub) * 0.25}, 760 ${yHub}`}
+          d={`M -40 ${y0} C 280 ${y0 + sag}, 520 ${yHub + (y0 - yHub) * 0.25}, 880 ${yHub}`}
           stroke="url(#tf-thread)"
           strokeWidth={i === 2 ? 2 : 1.4}
           fill="none"
@@ -67,7 +67,7 @@ export function ThreadField() {
 
       {/* the braid: one woven strand out of the hub */}
       <motion.path
-        d="M 760 250 C 880 250, 900 238, 980 238 S 1130 262, 1240 250"
+        d="M 880 318 C 980 318, 1000 306, 1070 306 S 1180 330, 1260 318"
         stroke="var(--amber)"
         strokeWidth="2.6"
         fill="none"
@@ -78,7 +78,7 @@ export function ThreadField() {
         transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1], delay: 1.7 }}
       />
       <motion.path
-        d="M 760 250 C 880 250, 900 262, 980 262 S 1130 238, 1240 250"
+        d="M 880 318 C 980 318, 1000 330, 1070 330 S 1180 306, 1260 318"
         stroke="var(--amber-hi)"
         strokeWidth="1.4"
         fill="none"
@@ -90,7 +90,7 @@ export function ThreadField() {
 
       {/* the newborn: arrives late, brighter, from below */}
       <motion.path
-        d="M 300 560 C 460 480, 600 330, 760 250"
+        d="M 380 580 C 540 500, 720 400, 880 318"
         stroke="var(--mint)"
         strokeWidth="1.8"
         fill="none"
@@ -103,8 +103,8 @@ export function ThreadField() {
 
       {/* hub */}
       <motion.circle
-        cx="760"
-        cy="250"
+        cx="880"
+        cy="318"
         r="46"
         fill="url(#tf-hub)"
         initial={{ opacity: 0, scale: 0.6 }}
@@ -118,11 +118,11 @@ export function ThreadField() {
             ? { duration: 0.5 }
             : { duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 1.4 }
         }
-        style={{ transformOrigin: "760px 250px" }}
+        style={{ transformOrigin: "880px 318px" }}
       />
       <motion.circle
-        cx="760"
-        cy="250"
+        cx="880"
+        cy="318"
         r="7"
         fill="var(--amber-hi)"
         filter="url(#tf-glow)"
