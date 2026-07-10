@@ -1,316 +1,157 @@
 /* ============================================================================
-   DreamWeave — "Midnight Loom" design system
-   ----------------------------------------------------------------------------
-   A warm-phosphor, loom-woven aesthetic. Deliberately NOT the daydreams
-   green-on-black terminal look: warm amber phosphor on a deep warm-black,
-   a mint spark for settled value, coral for voids. Display in Bricolage
-   Grotesque, data in JetBrains Mono, a single Instrument Serif italic accent.
+   DreamWeave design system — warm phosphor-amber on deep near-black.
+   Distinctive but the app chrome (nav/labels) stays plain and legible.
    ========================================================================== */
 
 :root {
-  /* --- warm-black substrate --- */
-  --ink-900: #0b0906;
-  --ink-850: #100d09;
-  --ink-800: #16120c;
-  --ink-700: #201a11;
-  --ink-600: #2e2517;
-  --hair: #3a2f1e;
-  --hair-soft: #271f14;
+  --bg: #0a0a0c;
+  --bg-1: #101014;
+  --bg-2: #16161c;
+  --bg-3: #1e1e26;
+  --line: #2a2a34;
+  --line-soft: #20202a;
 
-  /* --- phosphor amber (primary) --- */
-  --amber-050: #fff6e6;
-  --amber-200: #ffe1a8;
-  --amber-400: #ffc65c;
-  --amber-500: #ffb020;
-  --amber-600: #e8951a;
-  --glow-amber: rgba(255, 176, 32, 0.55);
+  --amber: #ffb020;
+  --amber-hi: #ffc65c;
+  --amber-lo: #e8951a;
+  --amber-glow: rgba(255, 176, 32, 0.5);
 
-  /* --- accents --- */
-  --mint-400: #7ff0c2; /* settled / cleared value */
-  --mint-glow: rgba(127, 240, 194, 0.5);
-  --coral-400: #ff7a6b; /* void / refund */
-  --coral-glow: rgba(255, 122, 107, 0.45);
-  --violet-400: #b79bff; /* proof / attestation */
+  --mint: #6fe3bf; /* paid / success */
+  --mint-glow: rgba(111, 227, 191, 0.45);
+  --violet: #b79bff; /* proof / attestation */
+  --coral: #ff7a6b; /* failed / refund */
+  --sky: #6bc5ff;
 
-  /* --- text --- */
-  --text-hi: #f6ead4;
-  --text: #d8c8a8;
-  --text-dim: #9c8a6a;
-  --text-faint: #6b5c44;
+  --text-hi: #f4efe4;
+  --text: #cfc8b8;
+  --text-dim: #97907f;
+  --text-faint: #625c4e;
 
-  /* --- type --- */
-  --font-display: "Bricolage Grotesque", "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
-  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* --- geometry --- */
-  --radius: 4px;
-  --radius-lg: 10px;
-  --maxw: 1240px;
-
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --r: 8px;
+  --r-lg: 14px;
+  --maxw: 1200px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
-  background: var(--ink-900);
+  background: var(--bg);
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
 
-/* Atmospheric substrate: a soft phosphor bloom top-left + a fine woven grid. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(
-      120% 90% at 8% -10%,
-      rgba(255, 176, 32, 0.13),
-      transparent 55%
-    ),
-    radial-gradient(
-      90% 70% at 100% 0%,
-      rgba(183, 155, 255, 0.07),
-      transparent 60%
-    ),
-    var(--ink-900);
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
   z-index: -1;
-  background-image: linear-gradient(var(--hair-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hair-soft) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(120% 100% at 50% 0%, #000 25%, transparent 78%);
-  opacity: 0.5;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 80% at 12% -8%, rgba(255, 176, 32, 0.1), transparent 55%),
+    radial-gradient(90% 60% at 100% 0%, rgba(183, 155, 255, 0.06), transparent 60%);
 }
 
-::selection {
-  background: var(--amber-500);
-  color: var(--ink-900);
-}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font-family: inherit; }
 
-a {
-  color: var(--amber-400);
-  text-decoration: none;
-}
-a:hover {
-  color: var(--amber-200);
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: inherit;
-}
-
-h1,
-h2,
-h3 {
+h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 0.98;
+  line-height: 1.05;
   color: var(--text-hi);
 }
 
-.serif-accent {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--amber-400);
-}
+::selection { background: var(--amber); color: #000; }
 
-/* --- layout --- */
-.wrap {
-  width: 100%;
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 0 28px;
-}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb { background: var(--line); border-radius: 9px; }
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* --- shared atoms --- */
+.mono { font-family: var(--font-mono); }
+.dim { color: var(--text-dim); }
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.28em;
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 
-.mono-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-/* --- panels / cards --- */
-.panel {
-  background: linear-gradient(180deg, var(--ink-800), var(--ink-850));
-  border: 1px solid var(--hair);
-  border-radius: var(--radius-lg);
-  position: relative;
-}
-.panel--inset {
-  background: var(--ink-850);
-}
-
-/* Corner ticks — a small signature detail on framed panels. */
-.ticks::before,
-.ticks::after {
-  content: "";
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  border-color: var(--amber-500);
-  border-style: solid;
-  opacity: 0.7;
-}
-.ticks::before {
-  top: -1px;
-  left: -1px;
-  border-width: 1px 0 0 1px;
-}
-.ticks::after {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 1px 1px 0;
-}
-
-/* --- buttons --- */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.06em;
-  padding: 12px 20px;
-  border-radius: var(--radius);
-  border: 1px solid var(--hair);
+  padding: 11px 18px;
+  border-radius: var(--r);
+  border: 1px solid var(--line);
+  background: var(--bg-2);
   color: var(--text-hi);
-  background: var(--ink-700);
-  transition: all 0.18s var(--ease-out);
+  transition: all 0.16s var(--ease);
+  white-space: nowrap;
 }
-.btn:hover {
-  border-color: var(--amber-500);
-  transform: translateY(-1px);
-}
+.btn:hover { border-color: var(--amber); transform: translateY(-1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 .btn--primary {
-  background: linear-gradient(180deg, var(--amber-400), var(--amber-600));
-  color: var(--ink-900);
-  border-color: var(--amber-400);
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber-lo));
+  color: #140d00;
+  border-color: var(--amber);
   font-weight: 700;
-  box-shadow: 0 0 0 0 var(--glow-amber);
 }
-.btn--primary:hover {
-  box-shadow: 0 8px 30px -8px var(--glow-amber);
-  border-color: var(--amber-200);
-}
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
+.btn--primary:hover { box-shadow: 0 10px 30px -10px var(--amber-glow); border-color: var(--amber-hi); }
+.btn--ghost { background: transparent; }
+.btn--sm { padding: 7px 12px; font-size: 12px; }
+
+.card {
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
 }
 
-/* --- chips / tags --- */
-.chip {
+.pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.1em;
-  padding: 4px 9px;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--hair);
+  border: 1px solid var(--line);
   color: var(--text-dim);
-  text-transform: uppercase;
 }
-.chip .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-faint);
-}
-.chip--live .dot {
-  background: var(--mint-400);
-  box-shadow: 0 0 8px var(--mint-glow);
-  animation: pulse 1.6s var(--ease-in-out) infinite;
-}
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
+.pill--live .dot { background: var(--mint); box-shadow: 0 0 8px var(--mint-glow); animation: blink 1.5s var(--ease) infinite; }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.8);
-  }
-}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes rise { from { opacity:0; transform: translateY(10px);} to {opacity:1; transform:none;} }
+.rise { animation: rise .5s var(--ease) both; }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* status colors for task phases */
+.ph { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; border: 1px solid currentColor; }
+.ph--planned, .ph--match { color: var(--text-dim); }
+.ph--negotiate, .ph--lock { color: var(--amber); }
+.ph--deliver { color: var(--violet); }
+.ph--clear { color: var(--mint); }
+.ph--void { color: var(--coral); }
 
-.rise {
-  animation: rise 0.7s var(--ease-out) both;
-}
-
-/* scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--hair) transparent;
-}
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-thumb {
-  background: var(--hair);
-  border-radius: 8px;
-}
+.wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
