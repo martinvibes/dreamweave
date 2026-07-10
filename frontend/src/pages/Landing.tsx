@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { animate, motion, useInView, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/auth/AuthProvider";
 import { ThemeToggle } from "@/theme/ThemeProvider";
 import { Logo } from "@/components/Logo";
 import { ThreadField } from "@/components/ThreadField";
+import { WeaveSpine } from "@/components/WeaveSpine";
 import { api, type Stats } from "@/lib/api";
 
 const STORE_URL = "https://agent.croo.network/agents/58729a60-4a85-44c3-b7f0-654f3c1ee5db";
@@ -25,12 +26,14 @@ export default function Landing() {
   const nav = useNavigate();
   const { authenticated, login } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { api.stats().then(setStats).catch(() => {}); }, []);
   const enter = () => (authenticated ? nav("/app") : login());
 
   return (
-    <div className="lp">
+    <div className="lp" ref={pageRef}>
+      <WeaveSpine containerRef={pageRef} />
       <motion.header className="lp__nav wrap" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <div className="lp__brand"><Logo size={28} /> <span>DreamWeave</span></div>
         <nav className="lp__links">
@@ -49,9 +52,11 @@ export default function Landing() {
         <motion.div className="pill pill--live" custom={0} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
           <span className="dot" /> Live on the CROO Agent Store · USDC on Base
         </motion.div>
-        <motion.h1 custom={1} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
-          Hire a <span className="hl">team</span>, not an agent.
-        </motion.h1>
+        <h1 style={{ zIndex: 1 }}>
+          <Stagger words={["Hire", "a"]} from={0.15} />{" "}
+          <Stagger words={["team,"]} from={0.35} className="hl" />{" "}
+          <Stagger words={["not", "an", "agent."]} from={0.45} />
+        </h1>
         <motion.p className="lp__sub" custom={2} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
           Describe an outcome. DreamWeave hires real specialist agents from the CROO store,
           pays them on-chain when their work is proven — and when the right specialist
@@ -69,6 +74,16 @@ export default function Landing() {
           <Stat v={stats ? String(stats.dreams) : "—"} k="projects run" />
           <Stat v={stats ? String(stats.cleared) : "—"} k="tasks delivered" />
           <Stat v={stats ? `$${stats.settledUsdc}` : "—"} k="paid to agents" mint />
+        </motion.div>
+        <motion.div
+          className="lp__scrollhint mono"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.2, duration: 1 }}
+          aria-hidden
+        >
+          <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}>↓</motion.span>
+          &nbsp;follow the thread
         </motion.div>
       </section>
 
@@ -131,9 +146,61 @@ function Section({ id, eyebrow, title, children, center }: { id?: string; eyebro
 function Stat({ v, k, mint }: { v: string; k: string; mint?: boolean }) {
   return (
     <div className={`lp__stat${mint ? " lp__stat--mint" : ""}`}>
-      <div className="lp__stat-v">{v}</div>
+      <div className="lp__stat-v"><CountUp value={v} /></div>
       <div className="lp__stat-k">{k}</div>
     </div>
   );
+}
+
+/** Words rise in one after another — the headline weaves itself together. */
+function Stagger({ words, from, className }: { words: string[]; from: number; className?: string }) {
+  return (
+    <>
+      {words.map((w, i) => (
+        <motion.span
+          key={w + i}
+          className={className}
+          style={{ display: "inline-block", whiteSpace: "pre" }}
+          initial={{ opacity: 0, y: "0.45em", rotate: 2 }}
+          animate={{ opacity: 1, y: 0, rotate: 0 }}
+          transition={{ delay: from + i * 0.09, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {w}
+          {i < words.length - 1 ? " " : ""}
+        </motion.span>
+      ))}
+    </>
+  );
+}
+
+/** Numbers count up when they scroll into view (prefix/suffix preserved). */
+function CountUp({ value }: { value: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const reduced = useReducedMotion();
+  const [shown, setShown] = useState(value);
+
+  useEffect(() => {
+    const m = value.match(/^([^0-9]*)([\d.,]+)(.*)$/);
+    if (!m || reduced || !inView) {
+      setShown(value);
+      return;
+    }
+    const [, pre, num, post] = m;
+    const target = Number(num!.replace(/,/g, ""));
+    if (!Number.isFinite(target)) {
+      setShown(value);
+      return;
+    }
+    const decimals = num!.includes(".") ? (num!.split(".")[1]?.length ?? 0) : 0;
+    const controls = animate(0, target, {
+      duration: 1.2,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setShown(`${pre}${v.toFixed(decimals)}${post}`),
+    });
+    return () => controls.stop();
+  }, [value, inView, reduced]);
+
+  return <span ref={ref}>{shown}</span>;
 }
 
