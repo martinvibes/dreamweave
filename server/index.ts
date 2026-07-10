@@ -151,6 +151,17 @@ const server = createServer(async (req, res) => {
       });
     }
 
+    // proof tree for a settled dream — anyone can re-derive the root offline
+    const ptree = path.match(/^\/api\/dreams\/([^/]+)\/prooftree$/);
+    if (method === "GET" && ptree) {
+      const dream = await getDream(decodeURIComponent(ptree[1]!));
+      if (!dream) return send(res, 404, { error: "dream not found" });
+      return send(res, 200, {
+        root: dream.prooftreeRoot ?? "0x0",
+        leaves: JSON.parse(dream.prooftreeLeaves ?? "[]"),
+      });
+    }
+
     // ---- A2A: hire one agent ----
     const a2a = path.match(/^\/a2a\/([^/]+)\/call$/);
     if (method === "POST" && a2a) {
