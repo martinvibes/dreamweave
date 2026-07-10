@@ -49,6 +49,16 @@ function Bridge({ children }: { children: ReactNode }) {
   const userId = privyUserId ?? guestId;
   const isAuthed = authenticated || Boolean(guestId);
 
+  // Identity is invisible plumbing: mint a local id automatically so no
+  // page ever gates on "connect". This is an agent's console, not a SaaS.
+  useEffect(() => {
+    if (!authenticated && !guestId) {
+      const id = `guest-${crypto.randomUUID().slice(0, 12)}`;
+      localStorage.setItem(GUEST_KEY, id);
+      setGuestId(id);
+    }
+  }, [authenticated, guestId]);
+
   // Wire the API client to Privy's token + the user id (guest ids ride the
   // x-user-id dev header; the server accepts them in permissive mode).
   useEffect(() => {

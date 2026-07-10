@@ -25,10 +25,10 @@ export default function Projects() {
     <div>
       <div className="page-head">
         <div>
-          <div className="eyebrow">Projects</div>
-          <h1>Your projects</h1>
+          <div className="eyebrow">Runs</div>
+          <h1>Runs</h1>
         </div>
-        <button className="btn btn--primary" onClick={() => nav("/app/new")}>+ New Project</button>
+        <button className="btn btn--primary" onClick={() => nav("/app/new")}>▶ Run a goal</button>
       </div>
 
       {projects.length === 0 ? (

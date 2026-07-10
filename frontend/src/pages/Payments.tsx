@@ -45,9 +45,9 @@ export default function Payments() {
     <div>
       <div className="page-head">
         <div>
-          <div className="eyebrow">Payments</div>
-          <h1>Payments</h1>
-          <p>Every payout to an agent — released only after a verified delivery.</p>
+          <div className="eyebrow">Earnings</div>
+          <h1>Money in, money out</h1>
+          <p>Every payout to a hired agent — released only after a verified delivery — and every royalty flowing back from born agents.</p>
         </div>
         <div className="card tile tile--mint" style={{ minWidth: 160 }}>
           <div className="tile__v">${total.toFixed(2)}</div>

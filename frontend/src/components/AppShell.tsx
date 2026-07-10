@@ -1,17 +1,15 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "@/auth/AuthProvider";
 import { ThemeToggle } from "@/theme/ThemeProvider";
 import { Logo } from "./Logo";
 
 const NAV = [
-  { to: "/app", label: "Dashboard", end: true, icon: iconGrid },
-  { to: "/app/projects", label: "Projects", icon: iconStack },
-  { to: "/app/agents", label: "Agents", icon: iconUsers },
-  { to: "/app/payments", label: "Payments", icon: iconCoin },
+  { to: "/app", label: "Overview", end: true, icon: iconGrid },
+  { to: "/app/projects", label: "Runs", icon: iconStack },
+  { to: "/app/agents", label: "Roster", icon: iconUsers },
+  { to: "/app/payments", label: "Earnings", icon: iconCoin },
 ];
 
 export function AppShell() {
-  const { authenticated, connected, login, logout, wallet, userId } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -23,7 +21,7 @@ export function AppShell() {
         </div>
 
         <button className="btn btn--primary side__cta" onClick={() => navigate("/app/new")}>
-          + New Project
+          ▶ Run a goal
         </button>
 
         <nav className="side__nav">
@@ -69,17 +67,10 @@ export function AppShell() {
             <span className="pill"><span className="dot" style={{ background: "var(--sky)" }} /> Paid on Base · USDC</span>
           </div>
           <div className="topbar__acct">
+            <a className="btn btn--sm btn--ghost" href="/proof" target="_blank" rel="noreferrer">
+              Public proof ↗
+            </a>
             <ThemeToggle />
-            {authenticated ? (
-              <>
-                <span className="acct-chip mono">
-                  {wallet ? short(wallet) : connected ? short(userId ?? "") : "guest"}
-                </span>
-                <button className="btn btn--sm btn--ghost" onClick={logout}>Sign out</button>
-              </>
-            ) : (
-              <button className="btn btn--sm btn--primary" onClick={login}>Connect</button>
-            )}
           </div>
         </header>
 
@@ -89,12 +80,6 @@ export function AppShell() {
       </div>
     </div>
   );
-}
-
-function short(s: string): string {
-  if (s.startsWith("0x") && s.length > 10) return `${s.slice(0, 6)}…${s.slice(-4)}`;
-  if (s.length > 16) return `${s.slice(0, 10)}…`;
-  return s;
 }
 
 // --- inline icons (stroke = currentColor) ---
