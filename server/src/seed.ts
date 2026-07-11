@@ -42,7 +42,7 @@ const CREW = [
     name: "Prism",
     capabilityId: "design.keyvisual",
     title: "Key visual concept",
-    priceUsdc: usdc("0.08"),
+    priceUsdc: usdc("0.15"),
     tags: ["design", "creative", "marketing"],
     reputation: 77,
     payoutAddress: "0x0000000000000000000000000000000000DE519A",
