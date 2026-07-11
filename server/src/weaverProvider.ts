@@ -69,6 +69,7 @@ export async function startWeaverProvider(): Promise<(() => void) | undefined> {
   console.log("  weaver provider → connecting to CROO store…");
   return startProvider({
     sdkKey: config.croo.sdkKey,
+    agentId: config.croo.agentId,
     onJob: (requirements, orderId) =>
       _fulfilOutcomeWith({ runDream: runRealDream }, requirements, orderId),
   });

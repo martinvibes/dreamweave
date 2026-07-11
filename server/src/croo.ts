@@ -27,6 +27,23 @@ export function makeClient(sdkKey: string): AgentClient {
   );
 }
 
+/**
+ * CROO allows ONE websocket per SDK key — a second connection is killed as a
+ * "duplicate key" policy violation. Every consumer (provider loop + hires)
+ * must share a single client + stream per key.
+ */
+const pool = new Map<string, { client: AgentClient; stream: Promise<StreamLike> }>();
+
+function connection(sdkKey: string): { client: AgentClient; stream: Promise<StreamLike> } {
+  let c = pool.get(sdkKey);
+  if (!c) {
+    const client = makeClient(sdkKey);
+    c = { client, stream: client.connectWebSocket() as unknown as Promise<StreamLike> };
+    pool.set(sdkKey, c);
+  }
+  return c;
+}
+
 interface WsEvent {
   negotiation_id?: string;
   order_id?: string;
@@ -42,20 +59,25 @@ interface StreamLike {
 export async function _hireWithClient(
   client: AgentClient,
   opts: { serviceId: string; requirements: string; timeoutMs?: number },
+  sharedStream?: StreamLike,
 ): Promise<HireResult> {
   const timeoutMs = opts.timeoutMs ?? 10 * 60 * 1000;
-  const stream = (await client.connectWebSocket()) as unknown as StreamLike;
+  const stream =
+    sharedStream ?? ((await client.connectWebSocket()) as unknown as StreamLike);
 
-  try {
-    return await new Promise<HireResult>((resolve, reject) => {
-      const timer = setTimeout(
-        () =>
-          reject(
-            new Error(`hire timeout after ${timeoutMs}ms (service ${opts.serviceId})`),
-          ),
-        timeoutMs,
-      );
+  // The stream is shared and the SDK has no off(): guard every handler so a
+  // settled hire ignores later events instead of double-resolving.
+  let settled = false;
+
+  return await new Promise<HireResult>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error(`hire timeout after ${timeoutMs}ms (service ${opts.serviceId})`));
+      }, timeoutMs);
       const fail = (err: unknown) => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timer);
         reject(err instanceof Error ? err : new Error(String(err)));
       };
@@ -67,7 +89,7 @@ export async function _hireWithClient(
       // we know our negotiation id, then replay.
       const earlyCreated: WsEvent[] = [];
       const onCreated = async (e: WsEvent) => {
-        if (!e.order_id) return;
+        if (settled || !e.order_id) return;
         if (!negotiationId) {
           earlyCreated.push(e);
           return;
@@ -84,12 +106,14 @@ export async function _hireWithClient(
       stream.on("order_created", onCreated);
 
       stream.on("order_completed", async (e) => {
-        if (e.order_id !== orderId || !orderId) return;
+        if (settled || e.order_id !== orderId || !orderId) return;
         try {
           const d = (await client.getDelivery(orderId)) as {
             deliverableText?: string;
             deliverableSchema?: string;
           };
+          if (settled) return;
+          settled = true;
           clearTimeout(timer);
           resolve({
             orderId,
@@ -124,17 +148,20 @@ export async function _hireWithClient(
         })
         .catch(fail);
     });
-  } finally {
-    stream.close();
-  }
 }
 
 /** Internal, client-injected provider loop — exported for tests. */
 export async function _provideWithClient(
   client: AgentClient,
-  opts: { onJob: (requirements: string, orderId: string) => Promise<string> },
+  opts: {
+    onJob: (requirements: string, orderId: string) => Promise<string>;
+    /** our agent id — on a shared stream, ignore orders we are BUYING */
+    agentId?: string;
+  },
+  sharedStream?: StreamLike,
 ): Promise<() => void> {
-  const stream = (await client.connectWebSocket()) as unknown as StreamLike;
+  const stream =
+    sharedStream ?? ((await client.connectWebSocket()) as unknown as StreamLike);
 
   stream.on("order_negotiation_created", async (e) => {
     if (!e.negotiation_id) return;
@@ -148,12 +175,16 @@ export async function _provideWithClient(
   stream.on("order_paid", async (e) => {
     if (!e.order_id) return;
     try {
-      // Requirements may ride on the event; if absent, fetch the order.
-      let requirements = e.requirements ?? "";
-      if (!requirements) {
-        const order = await client.getOrder(e.order_id);
-        requirements = String((order as { requirements?: string }).requirements ?? "");
+      const order = (await client.getOrder(e.order_id)) as {
+        requirements?: string;
+        providerAgentId?: string;
+      };
+      // Shared stream carries our BUYER-side events too — only act as the
+      // provider on orders that are actually ours to deliver.
+      if (opts.agentId && order.providerAgentId && order.providerAgentId !== opts.agentId) {
+        return;
       }
+      const requirements = String(order.requirements ?? e.requirements ?? "");
       const text = await opts.onJob(requirements, e.order_id);
       await client.deliverOrder(e.order_id, {
         deliverableType: DeliverableType.Text,
@@ -189,15 +220,24 @@ export async function hireService(opts: {
   timeoutMs?: number;
   sdkKey?: string;
 }): Promise<HireResult> {
-  return _hireWithClient(makeClient(opts.sdkKey ?? config.croo.sdkKey), {
-    ...opts,
-    requirements: asJsonRequirements(opts.requirements),
-  });
+  const conn = connection(opts.sdkKey ?? config.croo.sdkKey);
+  return _hireWithClient(
+    conn.client,
+    { ...opts, requirements: asJsonRequirements(opts.requirements) },
+    await conn.stream,
+  );
 }
 
 export async function startProvider(opts: {
   sdkKey: string;
+  agentId?: string;
   onJob: (requirements: string, orderId: string) => Promise<string>;
 }): Promise<() => void> {
-  return _provideWithClient(makeClient(opts.sdkKey), { onJob: opts.onJob });
+  const conn = connection(opts.sdkKey);
+  await _provideWithClient(
+    conn.client,
+    { onJob: opts.onJob, agentId: opts.agentId },
+    await conn.stream,
+  );
+  return () => {}; // shared stream stays open for other consumers
 }

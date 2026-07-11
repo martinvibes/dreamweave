@@ -40,6 +40,7 @@ export interface BirthDeps {
   ) => Promise<{ name: string; systemPrompt: string }>;
   startProvider: (opts: {
     sdkKey: string;
+    agentId?: string;
     onJob: (requirements: string, orderId: string) => Promise<string>;
   }) => Promise<() => void>;
 }
@@ -123,6 +124,7 @@ export async function _birthWith(
 
   await deps.startProvider({
     sdkKey: vessel.sdkKey,
+    agentId: vessel.agentId,
     onJob: async (requirements, orderId) => {
       const delivery = await executeAgent(agent, requirements);
       await recordAgentEarning(agent.id, CHILD_PRICE);
