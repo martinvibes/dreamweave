@@ -59,28 +59,42 @@ export async function complete(
   }
 
   const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: opts.temperature ?? 0.7,
-        // 0G models like deepseek/glm are reasoning models — they spend tokens
-        // on hidden reasoning before content, so give generous headroom.
-        max_tokens: opts.maxTokens ?? 1600,
-        // 0G: request on-chain TEE signature verification. The response trace
-        // carries verification + provider — our verifiable "proof of delivery".
-        ...(config.llm.teeProofs ? { verify_tee: true } : {}),
-      }),
-    });
-  } catch (err) {
-    throw new LlmError(`LLM request failed: ${String(err)}`);
+  const body = JSON.stringify({
+    model,
+    messages,
+    temperature: opts.temperature ?? 0.7,
+    // 0G models like deepseek/glm are reasoning models — they spend tokens
+    // on hidden reasoning before content, so give generous headroom.
+    max_tokens: opts.maxTokens ?? 1600,
+    // 0G: request on-chain TEE signature verification. The response trace
+    // carries verification + provider — our verifiable "proof of delivery".
+    ...(config.llm.teeProofs ? { verify_tee: true } : {}),
+  });
+
+  // Transient network errors (DNS hiccups, connection resets) happen under
+  // load — retry with backoff before declaring the task failed.
+  let res: Response | null = null;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${apiKey}`,
+        },
+        body,
+      });
+      break;
+    } catch (err) {
+      lastErr = err;
+      res = null;
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+    }
+  }
+  if (!res) {
+    const cause = (lastErr as { cause?: { code?: string } })?.cause?.code ?? String(lastErr);
+    throw new LlmError(`LLM request failed after 3 attempts: ${cause}`);
   }
 
   if (!res.ok) {

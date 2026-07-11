@@ -172,6 +172,16 @@ export async function _provideWithClient(
   return () => stream.close();
 }
 
+/** CROO's API requires `requirements` to be valid JSON — wrap plain text. */
+function asJsonRequirements(requirements: string): string {
+  try {
+    JSON.parse(requirements);
+    return requirements;
+  } catch {
+    return JSON.stringify({ task: requirements });
+  }
+}
+
 /** Public API — real clients from config/env keys. */
 export async function hireService(opts: {
   serviceId: string;
@@ -179,7 +189,10 @@ export async function hireService(opts: {
   timeoutMs?: number;
   sdkKey?: string;
 }): Promise<HireResult> {
-  return _hireWithClient(makeClient(opts.sdkKey ?? config.croo.sdkKey), opts);
+  return _hireWithClient(makeClient(opts.sdkKey ?? config.croo.sdkKey), {
+    ...opts,
+    requirements: asJsonRequirements(opts.requirements),
+  });
 }
 
 export async function startProvider(opts: {

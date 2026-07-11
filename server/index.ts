@@ -23,6 +23,10 @@
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
+import { setDefaultResultOrder } from "node:dns";
+
+// Prefer IPv4: some hosts advertise AAAA records that stall Node's fetch.
+setDefaultResultOrder("ipv4first");
 import { config } from "./src/config.js";
 import { getDb } from "./src/db.js";
 import { seedCrew } from "./src/seed.js";
