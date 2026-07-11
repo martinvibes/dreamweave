@@ -8,23 +8,18 @@ Two services: **API on Railway**, **web on Vercel**.
 2. Add the **PostgreSQL** plugin (Railway injects `DATABASE_URL` automatically).
 3. Set environment variables (Service → Variables):
 
+   Copy every `LLM_*` and `CROO_*` line from your local `.env` (0G keys, CROO
+   SDK key + agent id, `CROO_VESSELS` JSON), plus:
+
    ```
-   LLM_BASE_URL=https://router-api.0g.ai/v1
-   LLM_API_KEY=<your 0G key>
-   LLM_MODEL=deepseek-v4-flash
-   LLM_PLANNER_MODEL=glm-5.2
-   LLM_TEE_PROOFS=1
    WEB_ORIGIN=https://<your-vercel-domain>
    PRIVY_APP_ID=cmrb1gi9b000r0cjly6tupaz7
-   PRIVY_VERIFY=true
-   # on-chain settlement (optional, once DreamVault is deployed):
-   CHAIN_ID=84532
-   BASE_RPC_URL=https://sepolia.base.org
-   USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
-   DREAMVAULT_ADDRESS=<deployed address>
-   OPERATOR_PRIVATE_KEY=<operator key>
-   SETTLE_ONCHAIN=1
+   PRIVY_VERIFY=false   # guest identities; wallet login optional
    ```
+
+   With `CROO_SDK_KEY` set the Weaver provider connects on boot and DreamWeave
+   shows **Online** on the store 24/7. Postgres makes births, royalties, and
+   proof roots survive restarts (pg-mem locally resets each run).
 
    `railway.json` already sets `startCommand: npm start` and healthcheck `/health`.
 4. Note the public URL, e.g. `https://dreamweave-api.up.railway.app`.
