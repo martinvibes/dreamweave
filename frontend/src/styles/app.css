@@ -582,3 +582,48 @@
   padding: 10px 4px; font-size: 12px;
   border-bottom: 1px solid var(--line-soft);
 }
+
+/* --- weaving loader: the mini loom --- */
+.weaving { display: inline-grid; place-items: center; gap: 12px; }
+.weaving__t {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.85;
+  animation: weavedraw 1.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+.weaving__out {
+  fill: none;
+  stroke: var(--amber-hi);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: weavedraw 1.9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  animation-delay: 0.9s;
+}
+.weaving__hub {
+  fill: var(--amber-hi);
+  filter: drop-shadow(0 0 5px var(--amber-glow));
+  animation: weavehub 1.9s ease-in-out infinite;
+  transform-origin: 92px 20px;
+}
+@keyframes weavedraw {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  18% { opacity: 0.85; }
+  55% { stroke-dashoffset: 0; opacity: 0.85; }
+  82% { opacity: 0.85; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes weavehub {
+  0%, 40% { transform: scale(0.8); opacity: 0.5; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .weaving__t, .weaving__out { animation: none; stroke-dashoffset: 0; opacity: 0.85; }
+  .weaving__hub { animation: none; }
+}

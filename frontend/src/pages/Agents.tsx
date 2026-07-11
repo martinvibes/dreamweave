@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { api, type Agent } from "@/lib/api";
 import { AgentCard } from "@/components/AgentCard";
+import { SkeletonCards } from "@/components/Loader";
 
 /** Agents — born specialists first (they live on the CROO store), then the in-house crew. */
 export default function Agents() {
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[] | null>(null);
 
   useEffect(() => {
-    api.agents().then(setAgents).catch(() => {});
+    api.agents().then(setAgents).catch(() => setAgents([]));
   }, []);
 
-  const born = agents.filter((a) => a.tags.includes("born"));
-  const crew = agents.filter((a) => !a.tags.includes("born"));
+  const born = (agents ?? []).filter((a) => a.tags.includes("born"));
+  const crew = (agents ?? []).filter((a) => !a.tags.includes("born"));
 
   const meta = (a: Agent) => (
     <div className="mono" style={{ marginTop: 4, fontSize: 12, color: "var(--text-faint)" }}>
@@ -33,7 +34,9 @@ export default function Agents() {
       <p className="dim" style={{ marginBottom: 14, fontSize: 13.5 }}>
         Created by the Foundry when a project needed a missing skill. Each pays a 10% royalty on everything it earns.
       </p>
-      {born.length === 0 ? (
+      {agents === null ? (
+        <div style={{ marginBottom: 30 }}><SkeletonCards n={3} /></div>
+      ) : born.length === 0 ? (
         <div className="card empty" style={{ marginBottom: 30 }}>
           <h3>No agents born yet</h3>
           <p className="dim">Run a project that needs a skill nobody offers — a new agent will be created, listed, and hired live.</p>
@@ -45,9 +48,13 @@ export default function Agents() {
       )}
 
       <h2 style={{ fontSize: 18, marginBottom: 14 }}>In-house crew</h2>
-      <div className="grid grid--3">
-        {crew.map((a) => <AgentCard key={a.id} agent={a} action={meta(a)} />)}
-      </div>
+      {agents === null ? (
+        <SkeletonCards n={5} />
+      ) : (
+        <div className="grid grid--3">
+          {crew.map((a) => <AgentCard key={a.id} agent={a} action={meta(a)} />)}
+        </div>
+      )}
     </div>
   );
 }

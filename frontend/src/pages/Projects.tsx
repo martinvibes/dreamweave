@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, type DreamSummary } from "@/lib/api";
+import { SkeletonRows } from "@/components/Loader";
 import { useAuth } from "@/auth/AuthProvider";
 
 export default function Projects() {
   const nav = useNavigate();
   const { authenticated, login, ready } = useAuth();
-  const [projects, setProjects] = useState<DreamSummary[]>([]);
+  const [projects, setProjects] = useState<DreamSummary[] | null>(null);
 
   useEffect(() => {
-    if (authenticated) api.myProjects().then(setProjects).catch(() => {});
+    if (authenticated) api.myProjects().then(setProjects).catch(() => setProjects([]));
   }, [authenticated]);
 
   if (ready && !authenticated) {
@@ -31,14 +32,16 @@ export default function Projects() {
         <button className="btn btn--primary" onClick={() => nav("/app/new")}>▶ Run a goal</button>
       </div>
 
-      {projects.length === 0 ? (
+      {projects === null ? (
+        <SkeletonRows n={4} />
+      ) : projects.length === 0 ? (
         <div className="card empty">
           <h3>No projects yet</h3>
           <button className="btn btn--primary" onClick={() => nav("/app/new")}>Start your first project</button>
         </div>
       ) : (
         <div className="list">
-          {projects.map((p) => (
+          {(projects ?? []).map((p) => (
             <div key={p.id} className="list__row" onClick={() => nav(`/app/projects/${p.id}`)} style={{ cursor: "pointer" }}>
               <div>
                 <div className="list__title">{p.goal}</div>

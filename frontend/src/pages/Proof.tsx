@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/theme/ThemeProvider";
+import { Skeleton, SkeletonTiles } from "@/components/Loader";
 
 const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
 const STORE_URL = "https://agent.croo.network/agents/58729a60-4a85-44c3-b7f0-654f3c1ee5db";
@@ -105,7 +106,7 @@ export default function Proof() {
               <div className="tile__k">{t.k}</div>
             </motion.div>
           ))}
-          {!snap && <div className="dim mono" style={{ padding: 30 }}>loading live data…</div>}
+          {!snap && <SkeletonTiles n={6} />}
         </div>
 
         {snap && snap.births.length > 0 && (
@@ -148,6 +149,17 @@ export default function Proof() {
               </span>
             </div>
           ))}
+          {!snap &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="proof__row">
+                <Skeleton h={12} w={80} />
+                <Skeleton h={18} w={50} r={5} />
+                <Skeleton h={12} w="55%" />
+                <Skeleton h={12} w={44} />
+                <Skeleton h={18} w={80} r={5} />
+                <Skeleton h={12} w={70} />
+              </div>
+            ))}
           {snap && snap.orders.length === 0 && (
             <div className="dim" style={{ padding: 20 }}>No orders yet — the loom is warming up.</div>
           )}

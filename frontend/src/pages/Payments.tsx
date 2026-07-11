@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { api, type DreamSummary, type DreamDetail } from "@/lib/api";
 import { useAuth } from "@/auth/AuthProvider";
+import { SkeletonRows } from "@/components/Loader";
 
 interface RoyaltyRow {
   childAgentId: string;
@@ -14,7 +15,7 @@ interface RoyaltyRow {
 /** Payments — every payout across your projects. */
 export default function Payments() {
   const { authenticated, login, ready } = useAuth();
-  const [details, setDetails] = useState<DreamDetail[]>([]);
+  const [details, setDetails] = useState<DreamDetail[] | null>(null);
   const [royalties, setRoyalties] = useState<RoyaltyRow[]>([]);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function Payments() {
 
   const payments = useMemo(() => {
     const rows: { project: string; seller: string; amount: string; phase: string; tx?: string | null; tee: boolean }[] = [];
-    for (const d of details)
+    for (const d of details ?? [])
       for (const t of d.threads)
         if (t.phase === "clear")
           rows.push({ project: d.goal, seller: t.sellerName, amount: t.priceUsdc, phase: t.phase, tx: t.txHash, tee: !!t.teeProof });
@@ -55,7 +56,9 @@ export default function Payments() {
         </div>
       </div>
 
-      {payments.length === 0 ? (
+      {details === null ? (
+        <SkeletonRows n={3} />
+      ) : payments.length === 0 ? (
         <div className="card empty"><h3>No payments yet</h3><p className="dim">Run a project and payouts show up here.</p></div>
       ) : (
         <div className="list">

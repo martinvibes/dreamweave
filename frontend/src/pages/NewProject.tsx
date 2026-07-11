@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { api, type Plan } from "@/lib/api";
 import { useAuth } from "@/auth/AuthProvider";
 import { RunView } from "@/components/RunView";
-import { Loader } from "@/components/Loader";
+import { Loader, Weaving } from "@/components/Loader";
 import { useRun } from "@/lib/useRun";
 
 const EXAMPLES = [
@@ -13,28 +13,19 @@ const EXAMPLES = [
   "Create a full go-to-market kit for a DeFi app",
 ];
 
-const FAUCET = "https://faucet.circle.com/"; // Base Sepolia test USDC
-
 type Stage = "compose" | "review" | "run";
 
 export default function NewProject() {
   const nav = useNavigate();
-  const { authenticated, login, ready, wallet } = useAuth();
+  const { authenticated, login, ready } = useAuth();
   const [goal, setGoal] = useState("");
   const [stage, setStage] = useState<Stage>("compose");
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string | null>(null);
-  const [showFund, setShowFund] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const run = useRun(projectId);
-
-  useEffect(() => {
-    if (wallet) api.walletBalance(wallet).then((b) => setBalance(b.balanceUsdc)).catch(() => setBalance("0"));
-  }, [wallet, stage]);
 
   if (ready && !authenticated) {
     return (
@@ -66,13 +57,6 @@ export default function NewProject() {
     } catch (e) { setErr(msg(e)); } finally { setLoading(false); }
   }
 
-  function copyAddr() {
-    if (!wallet) return;
-    navigator.clipboard?.writeText(wallet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
   if (stage === "run" && projectId) {
     return (
       <div>
@@ -88,9 +72,6 @@ export default function NewProject() {
     );
   }
 
-  const budget = plan ? Number(plan.totalUsdc) : 0;
-  const bal = balance != null ? Number(balance) : null;
-  const funded = bal != null && bal >= budget;
 
   return (
     <div>
@@ -110,12 +91,26 @@ export default function NewProject() {
 
         {err && <p style={{ color: "var(--coral)", marginTop: 14 }} className="mono">{err}</p>}
 
-        {stage === "compose" && (
+        {stage === "compose" && !loading && (
           <div style={{ marginTop: 22 }}>
-            <button className="btn btn--primary btn--lg" onClick={preview} disabled={loading || !goal.trim()}>
-              {loading ? <Loader /> : "Plan the team →"}
+            <button className="btn btn--primary btn--lg" onClick={preview} disabled={!goal.trim()}>
+              Plan the team →
             </button>
           </div>
+        )}
+        {stage === "compose" && loading && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 30 }}>
+            <Weaving
+              size={170}
+              lines={[
+                "reading your goal…",
+                "splitting it into tasks…",
+                "shopping the CROO store…",
+                "checking who exists — and who doesn't…",
+                "pricing the team…",
+              ]}
+            />
+          </motion.div>
         )}
       </div>
 
@@ -140,41 +135,9 @@ export default function NewProject() {
               </motion.div>
             ))}
 
-            {/* funding */}
-            <div className="card fund" style={{ marginTop: 20 }}>
-              <div className="fund__bal">
-                <b>${plan.totalUsdc}</b>
-                <span>budget · your balance {bal != null ? `$${balance}` : "…"} USDC on Base</span>
-              </div>
-              <div className="row" style={{ flex: "0 0 auto", gap: 10, alignItems: "center" }}>
-                <span className={`pill ${funded ? "pill--live" : ""}`}>
-                  <span className="dot" style={funded ? { background: "var(--mint)" } : { background: "var(--amber)" }} />
-                  {funded ? "wallet funded" : "demo settles instantly"}
-                </span>
-                <button className="btn btn--sm" onClick={() => setShowFund((s) => !s)}>Fund wallet</button>
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {showFund && (
-                <motion.div className="card" style={{ padding: 18, marginBottom: 8 }}
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                  <div className="eyebrow" style={{ marginBottom: 10 }}>Fund your wallet (Base Sepolia)</div>
-                  <p className="dim" style={{ fontSize: 14, marginBottom: 12 }}>
-                    Send test USDC to your address, or grab some free from the faucet. Agents are paid from this balance on Base.
-                  </p>
-                  <div className="row" style={{ alignItems: "center" }}>
-                    <code className="input mono" style={{ flex: 2 }}>{wallet ?? "connect a wallet"}</code>
-                    <button className="btn btn--sm" style={{ flex: "0 0 auto" }} onClick={copyAddr}>{copied ? "Copied ✓" : "Copy"}</button>
-                    <a className="btn btn--sm" style={{ flex: "0 0 auto" }} href={FAUCET} target="_blank" rel="noreferrer">Get test USDC ↗</a>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div className="plan__total">
               <div>
-                <div className="eyebrow">Total budget</div>
+                <div className="eyebrow">Spend cap for this run</div>
                 <div className="big">${plan.totalUsdc} <span className="dim mono" style={{ fontSize: 14 }}>USDC</span></div>
               </div>
               <div className="row" style={{ flex: "0 0 auto", gap: 10 }}>
@@ -185,7 +148,8 @@ export default function NewProject() {
               </div>
             </div>
             <p className="hint" style={{ marginTop: 12 }}>
-              Funds are held until each agent delivers a verified result on 0G. Anything not spent returns to you.
+              Paid from the agent's own wallet, one task at a time — each only after its delivery
+              proof verifies. Unspent budget is never charged.
             </p>
           </motion.div>
         )}
