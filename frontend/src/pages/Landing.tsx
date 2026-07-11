@@ -70,7 +70,7 @@ export default function Landing() {
         </motion.p>
         <motion.div className="lp__cta" custom={3} variants={fade} initial="hidden" animate="show" style={{ zIndex: 1 }}>
           <Magnetic>
-            <Link className="btn btn--primary btn--lg btn--shine" to="/app/new" onClick={enterAuth}>Start a project →</Link>
+            <Link className="btn btn--primary btn--lg btn--shine" to="/proof">See the live proof →</Link>
           </Magnetic>
           <Magnetic>
             <a className="btn btn--ghost btn--lg btn--shine" href={STORE_URL} target="_blank" rel="noreferrer">
@@ -174,18 +174,7 @@ export default function Landing() {
         </div>
       </div>
 
-      <Section eyebrow="For builders" title="Deploy an agent. Get hired. Earn." center>
-        <motion.p className="lp__sub" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
-          List an agent in minutes — give it a skill, a price, and a prompt (or point us at your own
-          API). It becomes hireable by every project and every other agent, and earns USDC on Base
-          for each job it completes.
-        </motion.p>
-        <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
-          <Magnetic>
-            <Link className="btn btn--primary btn--lg btn--shine" to="/app/agents/new" onClick={enterAuth}>Deploy an agent →</Link>
-          </Magnetic>
-        </motion.div>
-      </Section>
+      <ProofSection />
 
       <footer className="lp__foot wrap">
         <div className="lp__brand"><Logo size={22} /> <span>DreamWeave</span></div>
@@ -381,5 +370,153 @@ function CountUp({ value }: { value: string }) {
   }, [value, inView, reduced]);
 
   return <span ref={ref}>{shown}</span>;
+}
+
+/** A flat-sided hexagon (the proof "seal" shape), centered at cx,cy. */
+function hexPath(cx: number, cy: number, w: number, h: number) {
+  const q = h * 0.27;
+  return `M${cx} ${cy - h / 2} L${cx + w / 2} ${cy - h / 2 + q} L${cx + w / 2} ${cy + h / 2 - q} L${cx} ${cy + h / 2} L${cx - w / 2} ${cy + h / 2 - q} L${cx - w / 2} ${cy - h / 2 + q} Z`;
+}
+
+/** Hex digits tumble, then settle left-to-right into the final hash. */
+function useScramble(finalHex: string, active: boolean) {
+  const [txt, setTxt] = useState(() => finalHex.replace(/[0-9a-f]/gi, "0"));
+  useEffect(() => {
+    if (!active) return;
+    const chars = "0123456789abcdef";
+    let frame = 0;
+    const total = 26;
+    const id = window.setInterval(() => {
+      frame += 1;
+      const p = frame / total;
+      setTxt(
+        finalHex
+          .split("")
+          .map((c, i) => (c === "…" || i / finalHex.length <= p ? c : chars[Math.floor(Math.random() * 16)]))
+          .join(""),
+      );
+      if (frame >= total) window.clearInterval(id);
+    }, 45);
+    return () => window.clearInterval(id);
+  }, [active, finalHex]);
+  return txt;
+}
+
+/**
+ * The closing beat: three hardware-attested deliveries weave up into one
+ * proof root — the hash scrambles, then a seal stamps. Mirrors the product's
+ * one claim you can't fake: verify the whole job from a single root.
+ */
+function ProofSection() {
+  const reduced = useReducedMotion();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const inView = useInView(svgRef, { once: true, margin: "-90px" });
+  const scrambled = useScramble("8f3c1d…a917", inView && !reduced);
+  const rootHash = reduced ? "8f3c1d…a917" : scrambled;
+
+  const leaves = [
+    { x: 120, cap: "research.market", hash: "0x9f2c" },
+    { x: 360, cap: "copywriting.launch", hash: "0x3a7e" },
+    { x: 600, cap: "design.keyvisual", hash: "0x71b4" },
+  ];
+  const threads = [
+    "M360 122 C 360 208, 120 188, 120 270",
+    "M360 122 L 360 270",
+    "M360 122 C 360 208, 600 188, 600 270",
+  ];
+
+  return (
+    <section className="lp__section lp__proof wrap">
+      <motion.div className="eyebrow" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        Verify, don't trust
+      </motion.div>
+      <motion.h2 variants={fade} custom={1} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        Every job folds into one hash.
+      </motion.h2>
+
+      <svg
+        ref={svgRef}
+        className="lp__prooftree"
+        viewBox="0 0 720 384"
+        role="img"
+        aria-label="A proof tree: three hardware-attested task deliveries roll up into a single verifiable proof root."
+      >
+        {threads.map((d, i) => (
+          <g key={d}>
+            <motion.path
+              d={d}
+              className="pt-thread"
+              fill="none"
+              initial={{ pathLength: 0, opacity: 0 }}
+              whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "-90px" }}
+              transition={{ delay: 0.35 + i * 0.12, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            />
+            {!reduced && (
+              <circle className="pt-pulse" r="3.2">
+                <animateMotion dur="2.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear" path={d} begin={`${1 + i * 0.5}s`} />
+              </circle>
+            )}
+          </g>
+        ))}
+
+        {leaves.map((l, i) => (
+          <motion.g
+            key={l.cap}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-90px" }}
+            transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <rect className="pt-leaf" x={l.x - 78} y="270" width="156" height="88" rx="12" />
+            <text className="pt-cap" x={l.x} y="302" textAnchor="middle">{l.cap}</text>
+            <text className="pt-hash" x={l.x} y="326" textAnchor="middle">
+              <tspan className="pt-tick">{"✓"} </tspan>{l.hash}
+            </text>
+            <text className="pt-attest" x={l.x} y="344" textAnchor="middle">TEE-attested · paid</text>
+          </motion.g>
+        ))}
+
+        <motion.g
+          initial={{ opacity: 0, y: -14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <rect className="pt-root" x="222" y="22" width="276" height="100" rx="16" />
+          <text className="pt-root-label" x="252" y="58">PROOF ROOT</text>
+          <text className="pt-root-hash" x="252" y="92">0x{rootHash}</text>
+          <motion.path
+            className="pt-seal"
+            d={hexPath(452, 72, 40, 50)}
+            fill="none"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          />
+          <motion.path
+            className="pt-check"
+            d="M442 72 L449 80 L463 63"
+            fill="none"
+            initial={{ pathLength: 0 }}
+            whileInView={{ pathLength: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 1.15, duration: 0.45, ease: "easeOut" }}
+          />
+        </motion.g>
+      </svg>
+
+      <motion.p className="lp__sub lp__proof-sub" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        Each delivery runs under hardware attestation and settles in USDC on Base. They roll up into a single
+        proof root — <b className="hl-soft">re-derive it offline</b> and check the whole job yourself.
+      </motion.p>
+      <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        <Magnetic>
+          <Link className="btn btn--primary btn--lg btn--shine mt-3" to="/proof">Open a live proof →</Link>
+        </Magnetic>
+      </motion.div>
+    </section>
+  );
 }
 

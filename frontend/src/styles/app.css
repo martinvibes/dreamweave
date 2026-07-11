@@ -387,7 +387,7 @@
 .lp__why-card { background: var(--bg-glass); backdrop-filter: blur(10px); }
 
 /* --- shine sweep on CTAs --- */
-.btn--shine { position: relative; overflow: hidden; }
+.btn--shine { position: relative; overflow: hidden; margin-top: 8px; }
 .btn--shine::after {
   content: "";
   position: absolute;
@@ -447,6 +447,45 @@
 .lp__marquee:hover .lp__marquee-track { animation-play-state: paused; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .lp__marquee-track { animation: none; } }
+
+/* --- proof tree: the closing beat — everything folds into one hash --- */
+.lp__proof { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.lp__prooftree {
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+  margin: 8px auto 4px;
+  overflow: visible;
+}
+.pt-thread { stroke: var(--amber); stroke-width: 1.5; opacity: 0.85; }
+.pt-pulse { fill: var(--mint); filter: drop-shadow(0 0 5px var(--mint-glow)); }
+.pt-leaf { fill: var(--bg-2); stroke: var(--line); stroke-width: 1; }
+.pt-cap {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 500;
+  fill: var(--text-hi); letter-spacing: -0.01em;
+}
+.pt-hash { font-family: var(--font-mono); font-size: 13px; fill: var(--text-dim); }
+.pt-tick { fill: var(--mint); font-weight: 700; }
+.pt-attest {
+  font-family: var(--font-mono); font-size: 9.5px; fill: var(--text-faint);
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.pt-root {
+  fill: var(--bg-1); stroke: var(--amber); stroke-width: 1.5;
+  filter: drop-shadow(0 0 26px var(--amber-glow));
+}
+.pt-root-label {
+  font-family: var(--font-mono); font-size: 11px; fill: var(--amber);
+  letter-spacing: 0.22em;
+}
+.pt-root-hash { font-family: var(--font-mono); font-size: 22px; font-weight: 700; fill: var(--text-hi); }
+.pt-seal { stroke: var(--mint); stroke-width: 2; }
+.pt-check { stroke: var(--mint); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.lp__proof-sub { max-width: 52ch; margin-left: auto; margin-right: auto; }
+@media (max-width: 560px) {
+  .pt-cap { font-size: 12px; }
+  .pt-root-hash { font-size: 18px; }
+}
 
 /* --- why section v2: sticky manifesto + feature ledger --- */
 .lp__why { padding: 90px 24px; }
