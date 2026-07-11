@@ -63,6 +63,9 @@ export interface Agent {
 export interface CrewMember {
   capabilityId: string;
   brief: string;
+  source: "store" | "local" | "new";
+  name: string;
+  priceUsdc: string;
   agent: Agent | null;
 }
 

@@ -126,12 +126,17 @@ export default function NewProject() {
             {plan.crew.map((c, i) => (
               <motion.div key={i} className="plan__row"
                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}>
-                <div className="plan__badge">{c.agent?.name.charAt(0) ?? "?"}</div>
+                <div className="plan__badge" style={c.source === "new" ? { borderColor: "var(--mint)", color: "var(--mint)" } : undefined}>
+                  {c.source === "new" ? "✦" : c.name.charAt(0)}
+                </div>
                 <div className="plan__who">
-                  <b>{c.agent?.name ?? "Unmatched"}</b> <span className="dim mono">· {c.capabilityId}</span>
+                  <b>{c.source === "new" ? "New specialist — created live" : c.name}</b>{" "}
+                  <span className="dim mono">· {c.capabilityId}</span>
+                  {c.source === "store" && <span className="pill" style={{ marginLeft: 8, fontSize: 10 }}>CROO store</span>}
+                  {c.source === "new" && <span className="pill" style={{ marginLeft: 8, fontSize: 10, color: "var(--mint)", borderColor: "var(--mint)" }}>birth</span>}
                   <p>{c.brief}</p>
                 </div>
-                <div className="plan__price">${c.agent?.priceUsdc ?? "—"}</div>
+                <div className="plan__price">${c.priceUsdc}</div>
               </motion.div>
             ))}
 

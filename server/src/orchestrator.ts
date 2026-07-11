@@ -32,7 +32,6 @@ import { birthAgent } from "./foundry.js";
 import { computeRoot, type ProofLeaf } from "./prooftree.js";
 import { config } from "./config.js";
 import {
-  bestAgentFor,
   createThread,
   getDream,
   listAgents,
@@ -44,21 +43,58 @@ import {
 
 const WEAVER_DID = "did:erc8004:weaver.dreamweave" as const;
 
+/** What a planned hire will look like — store agent, in-house, or a birth. */
+export interface PlannedHire {
+  capabilityId: string;
+  brief: string;
+  source: "store" | "local" | "new";
+  name: string;
+  priceUsdc: bigint;
+  agent?: AgentRow;
+}
+
+const NEWBORN_PRICE = 500000n; // 0.50 USDC — what a Foundry child charges
+
 /** Plan a dream (no execution) — used by the "review crew before funding" step. */
 export async function makePlan(goal: string): Promise<{
   plan: CrewPlan;
-  crew: { capabilityId: string; agent: AgentRow | undefined }[];
+  crew: PlannedHire[];
   totalUsdc: bigint;
 }> {
   const agents = await listAgents();
   const plan = await planDream(goal, agents);
-  const crew = await Promise.all(
-    plan.subtasks.map(async (s) => ({
-      capabilityId: s.capabilityId,
-      agent: await bestAgentFor(s.capabilityId),
-    })),
+  const crew: PlannedHire[] = await Promise.all(
+    plan.subtasks.map(async (s) => {
+      const r = await resolveCapability(s.capabilityId);
+      if (r.kind === "store") {
+        return {
+          capabilityId: s.capabilityId,
+          brief: s.brief,
+          source: "store" as const,
+          name: r.name,
+          priceUsdc: r.priceUsdc,
+        };
+      }
+      if (r.kind === "local") {
+        return {
+          capabilityId: s.capabilityId,
+          brief: s.brief,
+          source: "local" as const,
+          name: r.agent.name,
+          priceUsdc: r.agent.priceUsdc,
+          agent: r.agent,
+        };
+      }
+      return {
+        capabilityId: s.capabilityId,
+        brief: s.brief,
+        source: "new" as const,
+        name: "a specialist to be created",
+        priceUsdc: NEWBORN_PRICE,
+      };
+    }),
   );
-  const totalUsdc = crew.reduce((sum, c) => sum + (c.agent?.priceUsdc ?? 0n), 0n);
+  const totalUsdc = crew.reduce((sum, c) => sum + c.priceUsdc, 0n);
   return { plan, crew, totalUsdc };
 }
 

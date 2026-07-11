@@ -39,8 +39,9 @@ export async function planDream(
     try {
       const subtasks = await llmPlan(goal, caps);
       if (subtasks.length > 0) return { goal, subtasks, planner: "llm" };
-    } catch {
-      // fall through to heuristic
+      console.error("planner: LLM returned no usable subtasks — heuristic fallback");
+    } catch (err) {
+      console.error("planner: LLM plan failed — heuristic fallback:", (err as Error).message);
     }
   }
   return { goal, subtasks: heuristicPlan(goal, caps), planner: "heuristic" };
@@ -69,30 +70,35 @@ async function llmPlan(
         content:
           "You are the Weaver, an orchestrator that fulfils a client's goal by " +
           "hiring specialist agents. You break a goal into a minimal crew of " +
-          "3-5 subtasks, each assigned to ONE available capability. Respond with " +
-          "STRICT JSON only.",
+          "2-5 subtasks, each with ONE capability id. Capabilities are open-ended: " +
+          "you may use an in-house capability when it truly fits, or invent a new " +
+          "capability id for any skill the goal needs — the agent market will be " +
+          "searched for it, and if nobody offers it, a brand-new specialist agent " +
+          "is created on the spot. Respond with STRICT JSON only.",
       },
       {
         role: "user",
         content:
           `GOAL: ${goal}\n\n` +
-          `AVAILABLE CAPABILITIES (use only these ids):\n${menu}\n\n` +
+          `IN-HOUSE CAPABILITIES (prefer when they genuinely fit):\n${menu}\n\n` +
           `Return JSON of the form:\n` +
-          `{"subtasks":[{"capabilityId":"<one of the ids>","brief":"<concrete instruction for that agent>"}]}\n` +
-          `Rules: 3-5 subtasks, no duplicate capabilityId unless truly needed, ` +
-          `each brief is specific to the goal. JSON only, no prose.`,
+          `{"subtasks":[{"capabilityId":"<id>","brief":"<concrete instruction for that agent>"}]}\n` +
+          `Rules: 2-5 subtasks; capability ids are lowercase "domain.skill" ` +
+          `(e.g. research.market, translate.yoruba, audit.contracts); invent ids for skills ` +
+          `outside the in-house list; no duplicates; each brief is specific and self-contained ` +
+          `(the agent sees only its brief, not the goal). JSON only, no prose.`,
       },
     ],
     { temperature: 0.4, maxTokens: 1500, model: config.llm.plannerModel },
   );
 
   const parsed = extractJson(res.text);
-  const valid = new Set(caps.map((c) => c.capabilityId));
+  const CAP_ID = /^[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$/;
   const out: PlannedSubtask[] = [];
   for (const s of parsed?.subtasks ?? []) {
-    if (typeof s?.capabilityId === "string" && valid.has(s.capabilityId)) {
+    if (typeof s?.capabilityId === "string" && CAP_ID.test(s.capabilityId.trim())) {
       out.push({
-        capabilityId: s.capabilityId,
+        capabilityId: s.capabilityId.trim(),
         brief: String(s.brief ?? `Fulfil ${s.capabilityId} for: ${goal}`),
       });
     }

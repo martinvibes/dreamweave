@@ -263,6 +263,9 @@ const server = createServer(async (req, res) => {
         crew: plan.subtasks.map((s, i) => ({
           capabilityId: s.capabilityId,
           brief: s.brief,
+          source: crew[i]?.source ?? "local",
+          name: crew[i]?.name ?? "Unmatched",
+          priceUsdc: formatUsdc(crew[i]?.priceUsdc ?? 0n),
           agent: agentView(crew[i]?.agent),
         })),
       });
